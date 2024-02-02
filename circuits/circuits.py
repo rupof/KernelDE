@@ -1,0 +1,150 @@
+from squlearn.encoding_circuit import *
+
+import numpy as np
+#import reduce
+
+from squlearn.util import Executor
+from qiskit.primitives import Estimator, Sampler
+from squlearn.kernel.matrix import FidelityKernel, ProjectedQuantumKernel
+from qiskit import QuantumCircuit
+from qiskit.circuit import ParameterVector
+#import zzfeaturemap
+
+
+
+
+
+
+def IQPLikeCircuit(num_qubits, num_layers):
+    """
+    IQPLikeCircuit(num_qubits, num_layers)
+    Returns a circuit that is similar to the one used in IQP.
+    """
+    from qiskit.circuit.library import ZZFeatureMap
+    from functools import reduce
+
+    def self_product(x: np.ndarray) -> float:
+        """
+        Define a function map from R^n to R.
+
+        Args:
+            x: data
+
+        Returns:
+            float: the mapped value
+        """
+        #product of all elements in x
+        return reduce(lambda a, b: a * b, x)
+        
+    return  QiskitEncodingCircuit(ZZFeatureMap, feature_dimension=num_qubits, reps = num_layers, data_map_func = self_product)
+
+
+def Separable_rx(num_qubits, num_layers):
+    """
+    Separable_rx(num_qubits, num_layers)
+    Returns a circuit that is similar to the one used in IQP.
+    """
+    fmap = LayeredEncodingCircuit(num_qubits=num_qubits, num_features=num_qubits)
+    for layer in range(num_layers):
+        fmap.Rx("x")
+    return fmap
+
+def HardwareEfficientEmbeddingCircuit(num_qubits, num_layers, rotation_gate):
+    QC = QuantumCircuit(num_qubits)
+
+    def h_rz_gate(theta, qubit):
+        QC.h(qubit)
+        QC.rz(theta, qubit)
+
+    gate_mapping = {
+        'rx': QC.rx,
+        'ry': QC.ry,
+        'rz': QC.rz,
+        'h_rz': h_rz_gate
+    }
+
+    rotation_func = gate_mapping.get(rotation_gate)
+    if rotation_func is None:
+        raise ValueError("Invalid rotation_gate value. Choose 'rx', 'ry', 'rz', or 'h_rz'.")
+        
+    features = ParameterVector('x', num_qubits)
+    for layer in range(num_layers):
+        # Apply single-qubit rotations
+        for i in range(num_qubits):
+            rotation_func(features[i], i % num_qubits)
+        # Apply entangling gates
+        for i in range(num_qubits - 1):
+            QC.cx(i, i+1)
+    return QiskitEncodingCircuit(QC)
+#fmap = HardwareEfficientEmbeddingCircuit(num_qubits=num_qubits, num_layers=num_layers)
+
+
+def Hamiltonian_time_evolution_encoding(n_components, trotter_time_T, evolve_time_t):
+    """
+    Implements the Trotter formula, to time evolve a 1D Heisenberg chain Hamiltonian.
+
+    The feature map is given by:
+
+    |x\rangle = \left(\prod_{j=1}^{n} e^{-i \frac{t}{T}x_j H_j}\right) \otimes_{j=1}^{n+1} |\phi_j \rangle^{\otimes n+1}
+
+    where H_j = X_j X_{j+1} + Y_j Y_{j+1} + Z_j Z_{j+1} is the jth term in the Hamiltonian, and |\phi_j \rangle is a random Haar state of 
+    fixed seed.
+    
+    #This feature map represents a n_components-dimensional datapoint as a n_components+1-qubit quantum state
+
+    Power of data paper uses 
+
+    trotter_time_T = 20 # Trotter time is equivalent to layers of the circuit
+    evolve_time_t = n_components/3
+
+    """
+
+    from qiskit.quantum_info import Pauli, SparsePauliOp, random_statevector
+    from qiskit.circuit.library import PauliEvolutionGate
+
+
+
+    n_qubits = n_components + 1 
+    features = ParameterVector('x', n_components)
+
+    def H_j(j, n_qubits):
+        I_tensor = Pauli("I" * n_qubits)
+        X_j = I_tensor.copy()
+        X_j[j] = Pauli("X")
+        X_jp1 = I_tensor.copy()
+        X_jp1[j + 1] = Pauli("X")
+
+        Y_j = I_tensor.copy()
+        Y_j[j] = Pauli("Y")
+        Y_jp1 = I_tensor.copy()
+        Y_jp1[j + 1] = Pauli("Y")
+
+        Z_j = I_tensor.copy()
+        Z_j[j] = Pauli("Z")
+        Z_jp1 = I_tensor.copy()
+        Z_jp1[j + 1] = Pauli("Z")
+        return SparsePauliOp(X_j@X_jp1) + SparsePauliOp(Y_j@Y_jp1) + SparsePauliOp(Z_j@Z_jp1)
+
+    evolve_block = [PauliEvolutionGate(H_j(j, n_qubits), time=features[j]*evolve_time_t/trotter_time_T) for j in range(n_components)]
+    
+    circuit = QuantumCircuit(n_qubits)
+
+
+    initial_state = [1/np.sqrt(2), -1/np.sqrt(2)]
+    random_haar_states = [random_statevector(2, seed = seed) for seed in range(n_qubits)]
+    for i in range(n_qubits):
+        circuit.initialize(random_haar_states[i], i)
+
+    for _ in range(trotter_time_T):
+        for evo in evolve_block:
+            circuit.append(evo, range(n_qubits))
+    return QiskitEncodingCircuit(circuit)
+
+
+
+circuits_dictionary = {
+    "IQPLikeCircuit": IQPLikeCircuit,
+    "Separable_rx": Separable_rx,
+    "HardwareEfficientEmbeddingCircuit": HardwareEfficientEmbeddingCircuit,
+    "Hamiltonian_time_evolution_encoding": Hamiltonian_time_evolution_encoding
+}
