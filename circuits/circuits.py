@@ -197,9 +197,7 @@ def Hamiltonian_time_evolution_encoding(n_components, trotter_time_T, evolve_tim
 
 def FQK_kernel_circuit(encoding_circuit, num_qubits, **kwargs):
     U = encoding_circuit(inverse = False, num_qubits = num_qubits, **kwargs)
-    print(U)
     U_inv = encoding_circuit(inverse = True, num_qubits = num_qubits, **kwargs)
-    print(U_inv)
 
     circuit = QuantumCircuit(num_qubits)
     circuit.compose(U, inplace = True)
