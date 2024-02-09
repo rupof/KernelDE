@@ -76,7 +76,7 @@ def Separable_rx_qiskit(num_qubits, num_layers, inverse = False, only_one_variab
 def Separable_rx(num_qubits, num_layers, inverse = False):  
     return QiskitEncodingCircuit(Separable_rx_qiskit(num_qubits, num_layers, inverse))
 
-def HardwareEfficientEmbeddingCircuit_qiskit(num_qubits, num_layers, rotation_gate, inverse = False, only_one_variable = False):
+def HardwareEfficientEmbeddingCircuit_qiskit(num_qubits, num_layers, rotation_gate = "rx", inverse = False, only_one_variable = False):
     QC = QuantumCircuit(num_qubits)
 
     def h_rz_gate(theta, qubit):
@@ -210,4 +210,12 @@ circuits_dictionary = {
     "Separable_rx": Separable_rx,
     "HardwareEfficientEmbeddingCircuit": HardwareEfficientEmbeddingCircuit,
     "Hamiltonian_time_evolution_encoding": Hamiltonian_time_evolution_encoding
+}
+
+
+circuits_dictionary_qiskit = {
+    "IQPLikeCircuit": IQPLikeCircuit_qiskit,
+    "Separable_rx": Separable_rx_qiskit,
+    "HardwareEfficientEmbeddingCircuit": HardwareEfficientEmbeddingCircuit_qiskit,
+    "Hamiltonian_time_evolution_encoding": Hamiltonian_time_evolution_encoding_qiskit
 }
