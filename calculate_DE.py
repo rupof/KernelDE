@@ -54,6 +54,18 @@ solver = DifferentialEquationSolver(
                            },     
         )
 
+solver = DifferentialEquationSolver(
+    x_initial=x_initial,
+    f_initial=f_initial,
+    x_span = x_span,
+    kernel_method_info = {"encoding_circuit_label":"Separable_rx", 
+                          "encoding_circuit_parameters": {"num_qubits": 2, "num_layers": 1, "rotation_gate":"rx"},
+                            "executor_type":"statevector",
+                            "method":"PQK",
+                            "num_shots":None,   
+                            "kernel": "auto"
+                           },     
+        )
 # Solve the differential equation
 solution, optimal_alpha = solver.solve()
 
