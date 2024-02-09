@@ -3,39 +3,26 @@ from squlearn.encoding_circuit.encoding_circuit_derivatives import *
 
 import numpy as np
 from scipy.integrate import odeint
-from solvers.MMR.kernel_solver import *
-from solvers.MMR.PQK_solver import *
+from solvers.MMR.kernel_solver import Solver
+from solvers.MMR.PQK_solver import PQK_solver
+from solvers.MMR.FQK_solver import FQK_solver
 
- 
+from utils.rbf_kernel_tools import *
+from circuits.circuits import *
+
+import matplotlib.pyplot as plt
+
+
+
 def g(f, x):
         lamb = 20
         k = 0.1
         return -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f
 
 
-def rbf_fun(x,y,sigma=1):
-    return np.exp(-(x-y)**2/(2*sigma**2))
-
-def rbf_kernel_manual(x, y, sigma=1):
-    kernel = np.zeros((len(x), len(y)))
-    for i in range(len(x)):
-        for j in range(len(y)):
-            kernel[i, j] = rbf_fun(x[i], y[j], sigma)
-    return kernel
-
-def analytical_derivative_rbf_kernel(x, y, sigma=1):
-    derivative = np.zeros((len(x), len(y)))
-    for i in range(len(x)):
-        for j in range(len(y)):
-            derivative[i, j] = -rbf_fun(x[i], y[j], sigma) * (2*(x[i]-y[j])/(2*sigma**2))
-    return derivative
-
-
-
-
 ####################################3
 
-x_span = np.linspace(0, 1, 20)
+x_span = np.linspace(0, 1, 21)
 f_initial = 1
 
 ######################3
@@ -66,17 +53,24 @@ f_PQK = solution_PQK[0]
 optimal_alpha_PQK = solution_PQK[1]
 
 
+FQK_solver_test = FQK_solver({"encoding_circuit": HardwareEfficientEmbeddingCircuit_qiskit, 
+                              "num_qubits": 6,
+                              "num_layers": 2,
+                              "rotation_gate":"rx",},
+                              Executor("statevector_simulator"))
+solution_FQK, kernel_listFQK = FQK_solver_test.solver(x_span, f_initial, g)
+f_FQK = solution_FQK[0]
+optimal_alpha_FQK = solution_FQK[1]
 
-#plot all solutions
 
 
-import matplotlib.pyplot as plt
 
 
-x_span = x_span.reshape(-1, 1)
-plt.plot(x_span, f_odeint, label="odeint")
+x_span_plot = x_span.reshape(-1, 1)
+plt.plot(x_span_plot, f_odeint, label="odeint")
 plt.plot(x_span, f_RBF, label="RBF")
 plt.plot(x_span, f_PQK, label="PQK")
+plt.plot(x_span_plot, f_FQK, label="FQK")
 
 plt.legend()
 plt.show()

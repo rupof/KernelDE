@@ -110,10 +110,6 @@ class PQK_solver:
         - PQK_sol: The solution using the PQK solver.
         - kernel_list: The kernel list.
         """
-        
-        
-
-
 
         ### PQK
         PQK_qnn, obs_coef = self.PQK_QNN()
