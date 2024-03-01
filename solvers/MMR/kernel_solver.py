@@ -119,6 +119,5 @@ class Solver:
 
         return solution, optimal_alpha
 
-
-
+    
 

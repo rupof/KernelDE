@@ -118,3 +118,18 @@ class PQK_solver:
         Solver_ = Solver((K_f, K_dfdx), self.regularization_parameter)
         solution_ = Solver_.solve(x_span, f_initial, g)
         return solution_, kernel_list
+    
+    def get_Kernel(self, x_span):
+        """
+        Get the PQK kernel for the given input data.
+
+        Parameters:
+        - x_span: The input data. np.array of shape (n) where n is the number of samples. m dimensional input is not supported for PQK yet.
+
+        Returns:
+        - output_f_gramm_matrix: The PQK kernel.
+        """
+        PQK_qnn, obs_coef = self.PQK_QNN()
+        K_f, _ = self.get_PQK_kernel_derivatives(x_span, PQK_qnn, obs_coef, **self.envelope_parameters)
+        return K_f
+    

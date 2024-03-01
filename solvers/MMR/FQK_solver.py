@@ -164,4 +164,18 @@ class FQK_solver:
         solution_ = Solver_.solve(x_span, f_initial, g)
         return solution_, kernel_list
     
+    def get_Kernel(self, x_span):
+        """
+        Get the FQK kernel for the given input data.
+
+        Parameters:
+        - x_span: The input data. np.array of shape (n, m) where n is the number of samples and m is the number of features.
+
+        Returns:
+        - output_f: The FQK kernel.
+        """
+        FQK_qnn, obs_coef = self.FQK_QNN()
+        K_f, _ = self.get_FQK_kernel_derivatives(x_span, FQK_qnn, obs_coef)
+        return K_f
+    
     

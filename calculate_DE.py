@@ -14,11 +14,12 @@ import matplotlib.pyplot as plt
 
 
 
+
+
 def g(f, x):
         lamb = 20
         k = 0.1
         return -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f
-
 
 ####################################3
 

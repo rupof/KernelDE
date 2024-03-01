@@ -63,6 +63,12 @@ executor_type_list = ["statevector_simulator"]
 
 method_list = ["PQK"]
 experiment_better_combination = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, method_list, executor_type_list])
+experiment_2_combination = get_experiment_combination_list([function_list, encoding_circuit_list, [2, 3, 4, 5, 6, 7, 8, 9, 10, 12], num_layers_list, np.linspace(0.1, 3, 40), method_list, executor_type_list])
+
+experiment_2_FQK_combination = get_experiment_combination_list([function_list, encoding_circuit_list, [2, 3, 4, 5, 6, 7, 8, 9, 10, 12], num_layers_list,[0], ["FQK"], executor_type_list])
 
 experiment_list_total = [experiment_first_combination, #0
-                        experiment_better_combination,] #1
+                        experiment_better_combination, #1
+                        experiment_2_combination, #2
+                        experiment_2_FQK_combination, #3
+                        ] #1
