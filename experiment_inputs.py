@@ -41,6 +41,11 @@ def g(f, x):
         k = 0.1
         return -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f
 
+def g_exp(f, x):
+    lamb = 1
+    k = 1
+    return np.exp(-f*k)*lamb
+
 function_list = [g]
 num_qubits_list = [2, 3]
 num_layers_list = [1, 2]

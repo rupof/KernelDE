@@ -35,7 +35,7 @@ print("Number of cores:", num_cores)
 
 print("Starting the experiment list")
 
-x_span = np.linspace(0, 1, 30)
+x_span = np.linspace(0, 1, 40)
 f_initial = 1
 
 result_dic_list = []

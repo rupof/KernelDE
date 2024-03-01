@@ -61,7 +61,7 @@ optimal_alpha_PQK = solution_PQK[1]
 
 
 FQK_solver_test = FQK_solver({"encoding_circuit": HardwareEfficientEmbeddingCircuit_qiskit, 
-                              "num_qubits": 6,
+                              "num_qubits": 7,
                               "num_layers": 2,
                               "rotation_gate":"rx",},
                               Executor("statevector_simulator"))
@@ -74,12 +74,15 @@ optimal_alpha_FQK = solution_FQK[1]
 
 
 x_span_plot = x_span.reshape(-1, 1)
-plt.plot(x_span_plot, f_odeint, "-*",label="odeint")
-plt.plot(x_span, f_RBF, label="RBF")
-plt.plot(x_span, f_PQK, label="PQK")
+plt.plot(x_span, np.log(x_span), label="log(x)", linewidth=4., markersize=3)
+plt.plot(x_span_plot, f_odeint, "-*",label="odeint", linewidth=1, markersize=3)
+plt.plot(x_span, f_RBF, "-s", label="RBF", linewidth=1, markersize=3)
+plt.plot(x_span, f_PQK, "-o",label="PQK", linewidth=1, markersize=4)
 plt.plot(x_span_plot, f_FQK, "-x",label="FQK")
-plt.plot(x_span, np.log(x_span), label="log(x)")
-plt.ylim(-3, 3)
+plt.ylabel("f(x)")
+plt.xlabel("x")
+
+plt.savefig("log_example.png")
 
 plt.legend()
 plt.show()
