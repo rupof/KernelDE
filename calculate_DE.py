@@ -13,18 +13,38 @@ from circuits.circuits import *
 import matplotlib.pyplot as plt
 
 
-
+# General form of the differential equation is given by:
+# f'(x) = g(f, x)
 
 
 def g_paper(f, x):
+        """
+        df/dx = -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f
+
+        solution: f(x) = np.exp(-lamb * x * k) * np.cos(lamb * x), f(0) = 1
+        """
         lamb = 20
         k = 0.1
         return -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f
 
 def g_exp(f, x):
+    """
+    df/dx = lamb * np.exp(f * k) 
+    f(0.001) = np.log(0.001)
+
+    solution: f(x) = np.log(x)
+    """
     lamb = 1
     k = 1
     return np.exp(-f*k)*lamb
+
+def g_exp_2(f, x):
+    """
+    df/dx = 2*f+4*cos(x)-8*sin(x), f(0) = 3
+
+    solution: f(x) = 3*exp(2*x) + 4*sin(x)
+    """
+    return 2*f+4*np.cos(x)-8*np.sin(x)
 ####################################3
 
 

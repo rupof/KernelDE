@@ -21,6 +21,10 @@ index = str(sys.argv[1])
 index_experiment_list = int(sys.argv[2])
 num_cores = int(sys.argv[3])
 
+print("Index:", index)
+print("Index of experiment list:", index_experiment_list)
+print("Number of cores:", num_cores)
+
 experiment_list = experiment_list_total[index_experiment_list]
 results_folder_path = results_path + f"DE_{index}_{index_experiment_list}"
 if not os.path.exists(results_folder_path):
@@ -35,13 +39,15 @@ print("Number of cores:", num_cores)
 
 print("Starting the experiment list")
 
-x_span = np.linspace(0, 1, 40)
-f_initial = 1
+x_span = np.linspace(0.0001, 1, 40)
 
+
+cache = {}
 result_dic_list = []
 for idx, experiment in enumerate(experiment_list):
     print(f"Starting experiment {idx} with the following parameters: {experiment}")
     g = experiment["g"]
+    f_initial = experiment["f_initial"]
 
 
     if experiment["method"] == "PQK":
@@ -63,7 +69,15 @@ for idx, experiment in enumerate(experiment_list):
     solution, kernel_list = OSolver.solver(x_span, f_initial, g)
     f_sol = solution[0]
     optimal_alpha = solution[1]
-    mse = np.mean((f_sol - odeint(g, f_initial, x_span[:]))**2)
+
+    solution_label = f"{experiment['g_name']}_f_initial"
+    if solution_label in cache:
+        numerical_solution = cache[solution_label]
+    else:
+        numerical_solution = odeint(g, f_initial, x_span[:])
+        cache[solution_label] = numerical_solution
+    
+    mse = np.mean((f_sol - cache[solution_label]))**2
 
     dict_to_save = {"f_sol": f_sol, 
                     "optimal_alpha": optimal_alpha, 
@@ -82,14 +96,22 @@ for idx, experiment in enumerate(experiment_list):
     for key, value in experiment.items():
         if key == "circuit_information":
             pass
+        elif key == "g":
+            pass
+        elif key == "executor_type":
+            pass
         else:
             dict_to_save[key] = value
     print(dict_to_save)
     result_dic_list.append(pd.DataFrame([dict_to_save]))
 
 
-df = pd.concat(result_dic_list, axis=0, sort=False, ignore_index=True)
-df.reset_index(drop=True, inplace=True)
-df.to_feather(results_folder_path + "/T.feather")
+    df = pd.concat(result_dic_list, axis=0, sort=False, ignore_index=True)
+    df.reset_index(drop=True, inplace=True)
+
+    path = results_folder_path + f"/{idx}_T.feather"
+    df.to_feather(path)
+    print(f"Experiment {idx} finished")
+    print("Saved at:", path)
 
     

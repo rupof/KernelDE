@@ -25,6 +25,8 @@ def g_exp(f, x):
     lamb = 1
     k = 1
     return np.exp(-f*k)*lamb
+
+
 ####################################3
 
 

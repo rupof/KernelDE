@@ -158,8 +158,10 @@ class FQK_solver:
         ### PQK
 
         FQK_qnn, obs_coef = self.FQK_QNN()
+        print("Calculating the kernel and its derivatives")
         K_f, K_dfdx = self.get_FQK_kernel_derivatives(x_span, FQK_qnn, obs_coef)
         kernel_list = [K_f, K_dfdx] #Currently, only the first feature is used. To be changed with more varibles
+        print("Solving the ODE")
         Solver_ = Solver((K_f, K_dfdx[:,:,0]), self.regularization_parameter)
         solution_ = Solver_.solve(x_span, f_initial, g)
         return solution_, kernel_list
