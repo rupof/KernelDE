@@ -110,6 +110,25 @@ function_list = [("g_paper", 1), ("g_exp", np.log(0.0001)), ("g_exp_2", 3)]
 num_qubits_list = [2, 4, 6]
 num_layers_list = [1, 5, 10]
 experiment_FQK_combination_starting = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, [0], ["FQK"], executor_type_list])
+
+
+#Classical RBF
+function_list = [("g_paper", 1), ("g_exp", np.log(0.0001)), ("g_exp_2", 3)]
+num_qubits_list = [2]
+num_layers_list = [1]
+gamma_classical_bandwidth_list = np.linspace(0.1, 5, 200)
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+experiment_RBF_combination_starting = get_experiment_combination_list([function_list, ["NoCircuit"], [0], [0], sigma_classical_bandwidth_list, ["classical_RBF"], executor_type_list])
+
+#PQK 
+function_list = [("g_paper", 1), ("g_exp", np.log(0.0001)), ("g_exp_2", 3)]
+num_qubits_list = [2, 4, 6]
+num_layers_list = [1, 5, 10]
+gamma_classical_bandwidth_list = np.linspace(0.1, 5, 20)
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+experiment_PQK_combination_starting = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["PQK"], executor_type_list])
+
+
 ###############
 
 
@@ -117,5 +136,9 @@ experiment_list_total = [experiment_first_combination, #0
                         experiment_better_combination, #1
                         experiment_2_combination, #2
                         experiment_2_FQK_combination, #3
-                        experiment_FQK_combination_starting] #4
+                        experiment_FQK_combination_starting, #4
+                        experiment_RBF_combination_starting, # 5
+                        experiment_PQK_combination_starting #6
+
+                        ] 
 

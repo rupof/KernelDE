@@ -86,9 +86,15 @@ for idx, experiment in enumerate(experiment_list):
     #include all keys and values from experiment["circuit_information"] to the dict_to_save
     for key, value in experiment["circuit_information"].items():
         if key == "encoding_circuit":
-            dict_to_save["CI_encoding_circuit_label"] = value.__name__
+            try:
+                dict_to_save["CI_encoding_circuit_label"] = value.__name__
+            except:
+                dict_to_save["CI_encoding_circuit_label"] = value
         elif key == "executor":
-            dict_to_save["CI_executor_type_label"] = value.__name__
+            try:
+                dict_to_save["CI_executor_type_label"] = value.__name__
+            except:
+                dict_to_save["CI_executor_type_label"] = value
         elif key == "g":
             pass
         else:

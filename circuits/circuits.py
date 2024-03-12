@@ -209,7 +209,8 @@ circuits_dictionary = {
     "IQPLikeCircuit": IQPLikeCircuit,
     "Separable_rx": Separable_rx,
     "HardwareEfficientEmbeddingCircuit": HardwareEfficientEmbeddingCircuit,
-    "Hamiltonian_time_evolution_encoding": Hamiltonian_time_evolution_encoding
+    "Hamiltonian_time_evolution_encoding": Hamiltonian_time_evolution_encoding, 
+    "NoCircuit": "NoCircuit"
 }
 
 
@@ -219,5 +220,6 @@ circuits_dictionary_qiskit = {
     "Separable_rx_qiskit": Separable_rx_qiskit,
     "HardwareEfficientEmbeddingCircuit": HardwareEfficientEmbeddingCircuit_qiskit,
     "HardwareEfficientEmbeddingCircuit_qiskit": HardwareEfficientEmbeddingCircuit_qiskit,
-    "Hamiltonian_time_evolution_encoding": Hamiltonian_time_evolution_encoding_qiskit
+    "Hamiltonian_time_evolution_encoding": Hamiltonian_time_evolution_encoding_qiskit,
+    "NoCircuit": "NoCircuit"
 }

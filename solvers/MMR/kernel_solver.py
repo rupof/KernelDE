@@ -93,7 +93,7 @@ class Solver:
         L = sum2 + sum1 * self.regularization_parameter
         return L
 
-    def solve(self, x_span, f_initial, g):
+    def solver(self, x_span, f_initial, g):
         """Solves the differential equation using minimize from scipy.optimize.
 
         Args:
