@@ -65,11 +65,11 @@ for idx, experiment in enumerate(experiment_list):
         RBF_kernel_list = [rbf_kernel_manual(x_span, x_span, sigma = experiment["sigma"]), analytical_derivative_rbf_kernel(x_span, x_span, sigma = experiment["sigma"])]
         OSolver = Solver(RBF_kernel_list)
         dict_to_save = {"sigma": experiment["sigma"]}
+    
         
     solution, kernel_list = OSolver.solver(x_span, f_initial, g)
     f_sol = solution[0]
     optimal_alpha = solution[1]
-
     solution_label = f"{experiment['g_name']}_f_initial"
     if solution_label in cache:
         numerical_solution = cache[solution_label]

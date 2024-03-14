@@ -116,8 +116,8 @@ class Solver:
 
         optimal_alpha = result.x
         solution = self.f_alpha_0(optimal_alpha, kernel_order_0)
-
-        return solution, optimal_alpha
+        _ = 0
+        return [solution, optimal_alpha], _
 
     
 
