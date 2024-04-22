@@ -125,8 +125,9 @@ class FQK_solver:
         x_list_circuit_format = self.x_to_circuit_format(x_array)
 
 
-        output_f = qnn_.evaluate("f", x_list_circuit_format, [], coef)["f"]
+        output_f = qnn_.evaluate("f", x_list_circuit_format, [], coef)["f"] #
         output_dfdx = qnn_.evaluate("dfdx", x_list_circuit_format, [], coef)["dfdx"]
+
         
 
         #reshape the output to the shape of the gram matrix

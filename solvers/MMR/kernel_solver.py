@@ -39,61 +39,55 @@ class Solver:
         Initializes the Solver object.
 
         Args:
-            kernel_order_0 (int): Order of the kernel for f_alpha_0.
-            kernel_order_1 (int): Order of the kernel for f_alpha_1.
+            kernel_tensor (tuple): A tuple containing derivatives of kernel objects for K_(0) and K_(1), ... , K_(n).
             lamb (float, optional): Parameter for the g function. Defaults to 20.
             k (float, optional): Parameter for the g function. Defaults to 0.1.
             regularization_parameter (float, optional): Regularization parameter for the loss function. Defaults to 1.
             f_initial (float, optional): Initial value of the dependent variable. Defaults to 0.0.
         """
-
-        self.kernel_order_0 = kernel_tensor[0]
-        self.kernel_order_1 = kernel_tensor[1]
+        self.kernel_tensor = kernel_tensor
         self.regularization_parameter = regularization_parameter
 
-    def f_alpha_0(self, alpha_, kernel_order_0):
-        """Calculates f_alpha_0.
+    def f_alpha_order(self, alpha_, kernel_tensor, order):
+        """Calculates f_alpha.
 
         Args:
             alpha_ (np.ndarray): The vector of alphas, of shape (len(x_span)+1, 1).
-            kernel_order_0 (int): Order of the kernel.
+            kernel_tensor (tuple): A tuple containing kernel objects for f_alpha_0 and f_alpha_1.
+            order (int): Order of the kernel.
 
         Returns:
             np.ndarray: The vector of f_alphas, of shape (len(x_span), 1).
         """
-
-        b = alpha_[0]
         alpha = alpha_[1:]
-        return b + np.dot(kernel_order_0, alpha)
+        if order == 0:
+            return np.dot(kernel_tensor[order], alpha) + alpha_[0]
+        return np.dot(kernel_tensor[order], alpha)
 
-    def f_alpha_1(self, alpha_, kernel_order_1):
-        """Calculates f_alpha_1.
-
-        Args:
-            alpha_ (np.ndarray): The vector of alphas, of shape (len(x_span)+1, 1).
-            kernel_order_1 (int): Order of the kernel.
-
-        Returns:
-            np.ndarray: The vector of f_alphas, of shape (len(x_span), 1).
-        """
-
-        alpha = alpha_[1:]
-        return np.dot(kernel_order_1, alpha)
-
-
-    def loss_function(self, alpha_, g, f_initial, x_span, kernel_order_0, kernel_order_1):
+    
+    def loss_function(self, alpha_, L_functional, f_initial, x_span, kernel_tensor):
         """Calculates the loss function.
 
         Args:
             alpha_ (np.ndarray): The vector of alphas, of shape (len(x_span)+1, 
+            L_functional (function): The L functional, that describes the argument of the loss function. For example: L_functional = dfdx(alpha, K_1) - g(f(x, alpha, K_0), x)
+            
+            Example:
 
+            def L_g()
+            
+            #(self.f_alpha_1(alpha_, kernel_order_1) - g(self.f_alpha_0(alpha_, kernel_order_0), x_span)
         """
-        sum1 = np.sum((self.f_alpha_1(alpha_, kernel_order_1) - g(self.f_alpha_0(alpha_, kernel_order_0), x_span))**2)
-        sum2 = (self.f_alpha_0(alpha_, kernel_order_0)[0] - f_initial)**2
+        f_alpha_tensor = np.array([self.f_alpha_order(alpha_, kernel_tensor, i) for i in range(len(kernel_tensor))])
+        #print(f_alpha_tensor.shape, f_initial)
+        sum1 = np.sum((L_functional(f_alpha_tensor, x_span)**2)) #Functional
+        sum2 = np.sum((f_alpha_tensor[:,0][:len(f_initial)] - f_initial)**2) #Initial condition
         L = sum2 + sum1 * self.regularization_parameter
+
+        
         return L
 
-    def solver(self, x_span, f_initial, g):
+    def solver(self, x_span, f_initial, L_functional):
         """Solves the differential equation using minimize from scipy.optimize.
 
         Args:
@@ -104,18 +98,15 @@ class Solver:
             tuple: A tuple containing the solution and optimal alpha.
         """
 
-        kernel_order_0, kernel_order_1 = self.kernel_order_0, self.kernel_order_1
-        regularization_parameter = self.regularization_parameter
-
         alpha_0 = np.ones(len(x_span) + 1)
+        print(len(self.kernel_tensor))
+        print("Initial loss: ", self.loss_function(alpha_0, L_functional, f_initial, x_span, self.kernel_tensor))
 
-        print("Initial loss: ", self.loss_function(alpha_0, g, f_initial, x_span, kernel_order_0, kernel_order_1))
-        result = minimize(self.loss_function, alpha_0, args=(g,
-            f_initial, x_span, kernel_order_0, kernel_order_1),
+        result = minimize(self.loss_function, alpha_0, args=(L_functional, f_initial, x_span, self.kernel_tensor),
             options={'disp': True, 'maxiter': 10000})
 
         optimal_alpha = result.x
-        solution = self.f_alpha_0(optimal_alpha, kernel_order_0)
+        solution = self.f_alpha_order(optimal_alpha, self.kernel_tensor, 0)
         _ = 0
         return [solution, optimal_alpha], _
 

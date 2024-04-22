@@ -17,6 +17,11 @@ from .kernel_solver import *
 import numpy as np
 from scipy.optimize import minimize
 
+from utils.rbf_kernel_tools import *
+x_span = np.linspace(0.4, 1, 10)
+
+RBF_kernel_list_temp = [rbf_kernel_manual(x_span, x_span, sigma = 0.2), analytical_derivative_rbf_kernel(x_span, x_span, sigma = 0.2), analytical_derivative_rbf_kernel_2(x_span, x_span, sigma = 0.2)]
+
 class PQK_solver:
 
     def __init__(self, circuit_information, executor, envelope, regularization_parameter=1):
@@ -34,7 +39,8 @@ class PQK_solver:
         self.regularization_parameter = regularization_parameter
         self.envelope = envelope["function"]
         self.analytical_derivative = envelope["derivative_function"]
-        self.envelope_parameters = {key: value for key, value in envelope.items() if key not in {"function", "derivative_function"}}
+        self.analytical_derivative_2 = envelope["second_derivative_function"]
+        self.envelope_parameters = {key: value for key, value in envelope.items() if key not in {"function", "derivative_function", "second_derivative_function"}}
     
     
     def PQK_QNN(self):
@@ -83,17 +89,30 @@ class PQK_solver:
 
 
         x_list_circuit_format = x_array
-        output_f_column = qnn_.evaluate("f", x_list_circuit_format, [], coef)["f"]  #shape (n, 1)    #to be checked
+        output_f_column = qnn_.evaluate("f", x_list_circuit_format, [], coef)["f"]  #shape (n,)    #to be checked
         output_dfdx_qnn_column = qnn_.evaluate("dfdx", x_list_circuit_format, [], coef)["dfdx"] #shape (n, 1) #to be checked
-        
-        output_f_gramm_matrix = self.envelope(output_f_column, output_f_column, **kwargs).reshape((len(x_array), len(x_array))) #shape (n, n)
-        output_dfdx_gramm_matrix = self.analytical_derivative(output_f_column, output_f_column, **kwargs) * output_dfdx_qnn_column #shape (n, n, m) #to be checked
+        output_dfdxdx_qnn_column = qnn_.evaluate("dfdxdx", x_list_circuit_format, [], coef)["dfdxdx"] #shape (n, 1, 1) #to be checked
 
+        #reshape the output_f_column, output_dfdx_qnn_column, output_dfdxdx_qnn_column to (n, n)
+        #output_f_column = output_f_column.reshape(-1, 1) #reshape to column vector    
+        print("shapes")
+        print("output_f_gramm_matrix", output_f_column.shape)
+        print("output_dfdx_gramm_matrix", output_dfdx_qnn_column.shape)
+        print("output_dfdxdx_gramm_matrix", output_dfdxdx_qnn_column.shape)
 
-        return output_f_gramm_matrix, output_dfdx_gramm_matrix
+        output_f_gramm_matrix = self.envelope(output_f_column, output_f_column, **kwargs).reshape(len(x_array), len(x_array)) #shape (n, n) #to be checked
+        output_dfdx_gramm_matrix = self.analytical_derivative(output_f_column, output_f_column, **kwargs) * output_dfdx_qnn_column #shape (n, n) #to be checked
+
+        output_dfdxdx_gramm_matrix = self.analytical_derivative_2(output_f_column, output_f_column, **kwargs) * output_dfdx_qnn_column + self.analytical_derivative(output_f_column, output_f_column, **kwargs) * output_dfdxdx_qnn_column #shape (n, n) #to be checked
+        print("shapes")
+        print("output_f_gramm_matrix", output_f_gramm_matrix.shape)
+        print("output_dfdx_gramm_matrix", output_dfdx_gramm_matrix.shape)
+        print("output_dfdxdx_gramm_matrix", output_dfdxdx_gramm_matrix.shape)
+
+        return output_f_gramm_matrix, output_dfdx_gramm_matrix, output_dfdxdx_gramm_matrix[:,:,0]
     
 
-    def solver(self, x_span, f_initial, g):
+    def solver(self, x_span, f_initial, L_functional):
         """
         Solve the ODE using the PQK solver.
 
@@ -113,10 +132,13 @@ class PQK_solver:
 
         ### PQK
         PQK_qnn, obs_coef = self.PQK_QNN()
-        K_f, K_dfdx = self.get_PQK_kernel_derivatives(x_span, PQK_qnn, obs_coef, **self.envelope_parameters)
-        kernel_list = np.array([K_f, K_dfdx])
-        Solver_ = Solver((K_f, K_dfdx), self.regularization_parameter)
-        solution_ = Solver_.solver(x_span, f_initial, g)
+        K_f, K_dfdx, K_dfdxdx = self.get_PQK_kernel_derivatives(x_span, PQK_qnn, obs_coef, **self.envelope_parameters)
+        print("K_f", K_f.shape)
+        print("K_dfdx", K_dfdx.shape)
+        print("K_dfdxdx", K_dfdxdx.shape)
+        kernel_list = np.array([K_f, K_dfdx, K_dfdxdx])
+        Solver_ = Solver(kernel_list, self.regularization_parameter)
+        solution_ = Solver_.solver(x_span, f_initial, L_functional = L_functional)
         return solution_, kernel_list
     
     def get_Kernel(self, x_span):

@@ -48,34 +48,69 @@ def g_exp_2(f, x):
 ####################################3
 
 
-x_span = np.linspace(0.1, 1, 50)
-f_initial = np.log(x_span[0])
+x_span = np.linspace(0.01, 10, 50)
+f_initial_vec = np.array([0, 1])
 
 ######################3
 
-g = g_exp
 
 #Numerical and Analytical Solutions
-f_odeint = odeint(g, f_initial, x_span[:])
 #f_analytical_sol = f_analytical_fun(x_span)
+
+
+def L_functional_1ODE(f_alpha_tensor, x_span):
+    """
+    L_functional = dfdx - g(f(x), x)
+    """
+    f = f_alpha_tensor[0]
+    dfdx = f_alpha_tensor[1]
+    return dfdx - g(f, x_span)
+
+
+def f_derivatives_2ODE(f, x_span):
+    """
+    f'(x) = f'(x)
+    f''(x) = f(x)
+    """
+    return [f[1], -f[0]]
+
+
+f_odeint = odeint(f_derivatives_2ODE, f_initial_vec, x_span)
+
+
+def L_functional_2ODE(f_alpha_tensor, x_span):
+    """
+    L_functional = dfdx - g(f(x), x)
+    """
+    f = f_alpha_tensor[0]
+    dfdx = f_alpha_tensor[1]
+    dfdx2 = f_alpha_tensor[2]
+    return dfdx2 + f
+    
 
 #Classical Solver
 #RBF
-RBF_kernel_list = [rbf_kernel_manual(x_span, x_span, sigma = 0.2), analytical_derivative_rbf_kernel(x_span, x_span, sigma = 0.2)]
+sigma = 0.8
+RBF_kernel_list = [rbf_kernel_manual(x_span, x_span, sigma = sigma), 
+                   analytical_derivative_rbf_kernel(x_span, x_span, sigma = sigma), 
+                   analytical_derivative_rbf_kernel_2(x_span, x_span, sigma = sigma)]
 Solver_test = Solver(RBF_kernel_list)
-solution_RBF, _ = Solver_test.solver(x_span, f_initial, g)
+solution_RBF, _ = Solver_test.solver(x_span, f_initial_vec, L_functional = L_functional_2ODE)
 f_RBF, optimal_alpha_RBF = solution_RBF[0], solution_RBF[1] #fix bug here
+
+
 #PQK
-PQK_solver_test = PQK_solver({"encoding_circuit": Separable_rx_qiskit, 
-                              "num_qubits": 8,
-                              "num_layers": 2,
+PQK_solver_test = PQK_solver({"encoding_circuit": HardwareEfficientEmbeddingCircuit_qiskit, 
+                              "num_qubits": 4,
+                              "num_layers": 1,
                               },
                               Executor("statevector_simulator"), 
                               envelope={"function": rbf_kernel_manual, 
                                         "derivative_function": analytical_derivative_rbf_kernel, 
-                                        "sigma": 1})
+                                        "second_derivative_function": analytical_derivative_rbf_kernel_2,
+                                        "sigma": sigma})
 
-solution_PQK, kernel_list_PQK = PQK_solver_test.solver(x_span, f_initial, g)
+solution_PQK, kernel_list_PQK = PQK_solver_test.solver(x_span, f_initial_vec, L_functional = L_functional_2ODE)
 f_PQK, optimal_alpha_PQK = solution_PQK[0] ##fix bug here
 # = solution_PQK[1]
 
@@ -94,14 +129,12 @@ FQK_solver_test = FQK_solver({"encoding_circuit": HardwareEfficientEmbeddingCirc
 
 
 x_span_plot = x_span.reshape(-1, 1)
-print(f_RBF)
-print(optimal_alpha_PQK)
-plt.plot(x_span_plot, f_odeint, "-*",label="odeint")
+plt.plot(x_span_plot, f_odeint[:,0], "-*",label="odeint")
 plt.plot(x_span_plot, f_RBF, label="RBF")
 plt.plot(x_span_plot, f_PQK, label="PQK")
 #plt.plot(x_span_plot, f_FQK, "-x",label="FQK")
 #plt.plot(x_span, np.log(x_span), label="log(x)")
-plt.ylim(-3, 3)
+#plt.ylim(-3, 3)
 
 plt.legend()
 plt.show()
