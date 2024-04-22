@@ -124,18 +124,16 @@ class FQK_solver:
         x_array = x_array.reshape(-1, 1) #reshape to column vector
         x_list_circuit_format = self.x_to_circuit_format(x_array)
 
-
         output_f = qnn_.evaluate("f", x_list_circuit_format, [], coef)["f"] #
-        output_dfdx = qnn_.evaluate("dfdx", x_list_circuit_format, [], coef)["dfdx"]
-
-        
+        output_dfdx = qnn_.evaluate("dfdx", x_list_circuit_format, [], coef)["dfdx"][:,0]
+        output_dfdxdx = qnn_.evaluate("dfdxdx", x_list_circuit_format, [], coef)["dfdxdx"][:,0,0]
 
         #reshape the output to the shape of the gram matrix
         output_f = output_f.reshape((len(x_array), len(x_array)))
-        output_dfdx = output_dfdx.reshape((len(x_array), len(x_array), len(x_array[0])*2))
+        output_dfdx = output_dfdx.reshape((len(x_array), len(x_array)))
+        output_dfdxdx = output_dfdxdx.reshape((len(x_array), len(x_array)))
 
-
-        return output_f, output_dfdx
+        return output_f, output_dfdx, output_dfdxdx
 
    
     def solver(self, x_span, f_initial, L_functional):
