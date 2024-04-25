@@ -7,7 +7,6 @@ from squlearn.encoding_circuit import *
 import numpy as np
 from squlearn.observables import *
 from circuits.circuits import *
-from squlearn.qnn.qnn import QNN
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint

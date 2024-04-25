@@ -7,7 +7,7 @@ from squlearn.encoding_circuit import *
 import numpy as np
 from squlearn.observables import *
 from circuits.circuits import *
-from squlearn.qnn.qnn import QNN
+from squlearn.qnn.lowlevel_qnn import LowLevelQNN
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
@@ -103,7 +103,7 @@ class FQK_solver:
         FQK_Circuit = QiskitEncodingCircuit(FQK_kernel_circuit(self.encoding_circuit, self.num_qubits, only_one_variable = True, **self.circuit_information))
         #Create P0 observable
         P0_, P0_coef = self.P0_squlearn(self.num_qubits)
-        qnn_ = QNN(FQK_Circuit, P0_, self.executor, result_caching=False, optree_caching=False)
+        qnn_ = LowLevelQNN(FQK_Circuit, P0_, self.executor)
         return qnn_, P0_coef
     
     def get_FQK_kernel_derivatives(self, x_array, qnn_, coef):
@@ -124,9 +124,10 @@ class FQK_solver:
         x_array = x_array.reshape(-1, 1) #reshape to column vector
         x_list_circuit_format = self.x_to_circuit_format(x_array)
 
-        output_f = qnn_.evaluate("f", x_list_circuit_format, [], coef)["f"] #
-        output_dfdx = qnn_.evaluate("dfdx", x_list_circuit_format, [], coef)["dfdx"][:,0]
-        output_dfdxdx = qnn_.evaluate("dfdxdx", x_list_circuit_format, [], coef)["dfdxdx"][:,0,0]
+        output_f = qnn_.evaluate(x_list_circuit_format, [], coef, "f")["f"] #
+        output_dfdx = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdx")["dfdx"][:,0]
+        output_dfdxdx = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdxdx")["dfdxdx"][:,0,0]
+
 
         #reshape the output to the shape of the gram matrix
         output_f = output_f.reshape((len(x_array), len(x_array)))

@@ -81,14 +81,14 @@ f_RBF, optimal_alpha_RBF = solution_RBF[0], solution_RBF[1] #fix bug here
 
 #PQK
 PQK_solver_test = PQK_solver({"encoding_circuit": Separable_rx_qiskit, 
-                              "num_qubits": 8,
-                              "num_layers": 2,
+                              "num_qubits": 2,
+                              "num_layers": 5,
                               },
-                              Executor("statevector_simulator"), 
+                              Executor("pennylane"), 
                               envelope={"function": rbf_kernel_manual, 
                                         "derivative_function": analytical_derivative_rbf_kernel, 
                                         "second_derivative_function": analytical_derivative_rbf_kernel_2,
-                                        "sigma": 1})
+                                        "sigma": 0.5*(1/1.905)**2})
 
 solution_PQK, kernel_list_PQK = PQK_solver_test.solver(x_line, f_initial, L_functional = L_functional_1ODE)
 f_PQK, optimal_alpha_PQK = solution_PQK[0] ##fix bug here

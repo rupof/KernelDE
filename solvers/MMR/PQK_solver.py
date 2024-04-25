@@ -7,20 +7,18 @@ from squlearn.encoding_circuit import *
 import numpy as np
 from squlearn.observables import *
 from circuits.circuits import *
-from squlearn.qnn.qnn import QNN
+from squlearn.qnn.lowlevel_qnn import LowLevelQNN
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 from .kernel_solver import *
 
 
+
 import numpy as np
 from scipy.optimize import minimize
 
 from utils.rbf_kernel_tools import *
-x_span = np.linspace(0.4, 1, 10)
-
-RBF_kernel_list_temp = [rbf_kernel_manual(x_span, x_span, sigma = 0.2), analytical_derivative_rbf_kernel(x_span, x_span, sigma = 0.2), analytical_derivative_rbf_kernel_2(x_span, x_span, sigma = 0.2)]
 
 class PQK_solver:
 
@@ -67,7 +65,7 @@ class PQK_solver:
         observable = SummedPaulis(num_qubits, op_str="XYZ", include_identity=False, full_sum=False) #i.e Summed Paulis for a 2 qubit system: IX, XI, IY, YI, IZ, ZI
         observable.get_pauli_mapped([1 for i in range(observable.num_parameters)]) #
         observable_coef = [1 for i in range(observable.num_parameters)]
-        qnn_ = QNN(PQK_Circuit, observable, executor, result_caching=False, optree_caching=False)
+        qnn_ = LowLevelQNN(PQK_Circuit, observable, self.executor)
         return qnn_, observable_coef
     
     def get_PQK_kernel_derivatives(self, x_array, qnn_, coef, **kwargs):
@@ -89,9 +87,9 @@ class PQK_solver:
 
 
         x_list_circuit_format = x_array
-        output_f_column = qnn_.evaluate("f", x_list_circuit_format, [], coef)["f"]  #shape (n,)    #to be checked
-        output_dfdx_qnn_column = qnn_.evaluate("dfdx", x_list_circuit_format, [], coef)["dfdx"] #shape (n, 1) #to be checked
-        output_dfdxdx_qnn_column = qnn_.evaluate("dfdxdx", x_list_circuit_format, [], coef)["dfdxdx"] #shape (n, 1, 1) #to be checked
+        output_f_column = qnn_.evaluate(x_list_circuit_format, [], coef, "f")["f"] # #shape (n,)    
+        output_dfdx_qnn_column = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdx")["dfdx"][:,0] #shape (n, 1)
+        output_dfdxdx_qnn_column = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdxdx")["dfdxdx"][:,0,0] #shape (n, 1, 1)
 
         #reshape the output_f_column, output_dfdx_qnn_column, output_dfdxdx_qnn_column to (n, n)
         #output_f_column = output_f_column.reshape(-1, 1) #reshape to column vector    
@@ -109,7 +107,7 @@ class PQK_solver:
         print("output_dfdx_gramm_matrix", output_dfdx_gramm_matrix.shape)
         print("output_dfdxdx_gramm_matrix", output_dfdxdx_gramm_matrix.shape)
 
-        return output_f_gramm_matrix, output_dfdx_gramm_matrix, output_dfdxdx_gramm_matrix[:,:,0]
+        return output_f_gramm_matrix, output_dfdx_gramm_matrix, output_dfdxdx_gramm_matrix[:,:]
     
 
     def solver(self, x_span, f_initial, L_functional):
