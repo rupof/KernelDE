@@ -101,18 +101,17 @@ f_RBF, optimal_alpha_RBF = solution_RBF[0], solution_RBF[1] #fix bug here
 
 #PQK
 PQK_solver_test = PQK_solver({"encoding_circuit": HardwareEfficientEmbeddingCircuit_qiskit, 
-                              "num_qubits": 4,
+                              "num_qubits": 6,
                               "num_layers": 1,
                               },
-                              Executor("statevector_simulator"), 
+                              Executor("pennylane"), 
                               envelope={"function": rbf_kernel_manual, 
                                         "derivative_function": analytical_derivative_rbf_kernel, 
                                         "second_derivative_function": analytical_derivative_rbf_kernel_2,
                                         "sigma": sigma})
 
-#solution_PQK, kernel_list_PQK = PQK_solver_test.solver(x_span, f_initial_vec, L_functional = L_functional_2ODE)
-#f_PQK, optimal_alpha_PQK = solution_PQK[0] ##fix bug here
-# = solution_PQK[1]
+solution_PQK, kernel_list_PQK = PQK_solver_test.solver(x_span, f_initial_vec, L_functional = L_functional_2ODE)
+f_PQK, optimal_alpha_PQK = solution_PQK[0] ##fix bug here
 
 
 FQK_solver_test = FQK_solver({"encoding_circuit": Separable_rx_qiskit,
@@ -132,8 +131,8 @@ f_FQK, optimal_alpha_FQK = solution_FQK[0]
 x_span_plot = x_span.reshape(-1, 1)
 plt.plot(x_span_plot, f_odeint[:,0], "-*",label="odeint")
 plt.plot(x_span_plot, f_RBF, label="RBF")
-#plt.plot(x_span_plot, f_PQK, label="PQK")
-plt.plot(x_span_plot, f_FQK, "-x",label="FQK")
+plt.plot(x_span_plot, f_PQK, label="PQK")
+#plt.plot(x_span_plot, f_FQK, "-x",label="FQK")
 #plt.plot(x_span, np.log(x_span), label="log(x)")
 #plt.ylim(-3, 3)
 

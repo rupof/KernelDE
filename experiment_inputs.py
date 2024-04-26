@@ -22,7 +22,6 @@ def get_experiment_combination_list(experimental_parameters):
     print(sorted_parameters)
     for params in product(*sorted_parameters):
         function_pair, encoding_circuit, num_qubits, num_layers, sigma, method, executor_type = params
-        print(function_pair)
         function = function_pair[0]
         f_initial = function_pair[1]
 

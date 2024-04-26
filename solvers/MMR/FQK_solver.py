@@ -106,7 +106,7 @@ class FQK_solver:
         qnn_ = LowLevelQNN(FQK_Circuit, P0_, self.executor)
         return qnn_, P0_coef
     
-    def get_FQK_kernel_derivatives(self, x_array, qnn_, coef):
+    def get_FQK_kernel_derivatives(self, x_array, qnn_, coef, f_initial, **kwargs):
         """
         Get the FQK kernel and its derivatives for the given input data.
 
@@ -124,15 +124,27 @@ class FQK_solver:
         x_array = x_array.reshape(-1, 1) #reshape to column vector
         x_list_circuit_format = self.x_to_circuit_format(x_array)
 
+        print(x_list_circuit_format.shape)
+
         output_f = qnn_.evaluate(x_list_circuit_format, [], coef, "f")["f"] #
+        print("output_f", output_f.shape)
         output_dfdx = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdx")["dfdx"][:,0]
-        output_dfdxdx = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdxdx")["dfdxdx"][:,0,0]
+        print("output_dfdx", output_dfdx.shape)
+        if len(f_initial) == 2:
+            output_dfdxdx = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdxdx")["dfdxdx"][:,0,0]
+            print("output_dfdxdx", output_dfdxdx.shape)
+        else:
+            output_dfdxdx = np.zeros_like(output_f)
+
+
 
 
         #reshape the output to the shape of the gram matrix
         output_f = output_f.reshape((len(x_array), len(x_array)))
         output_dfdx = output_dfdx.reshape((len(x_array), len(x_array)))
         output_dfdxdx = output_dfdxdx.reshape((len(x_array), len(x_array)))
+
+
 
         return output_f, output_dfdx, output_dfdxdx
 
@@ -159,7 +171,7 @@ class FQK_solver:
 
         FQK_qnn, obs_coef = self.FQK_QNN()
         print("Calculating the kernel and its derivatives")
-        K_f, K_dfdx, K_dfdxdx = self.get_FQK_kernel_derivatives(x_span, FQK_qnn, obs_coef)
+        K_f, K_dfdx, K_dfdxdx = self.get_FQK_kernel_derivatives(x_span, FQK_qnn, obs_coef, f_initial)
         print("K_f", K_f.shape)
         print("K_dfdx", K_dfdx.shape)
         print("K_dfdxdx", K_dfdxdx.shape)

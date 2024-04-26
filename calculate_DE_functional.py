@@ -48,7 +48,7 @@ def g_exp_2(f, x):
 ####################################3
 
 
-x_line = np.linspace(0.1, 1, 50)
+x_line = np.linspace(0.1, 1, 20)
 
 f_initial = [np.log(x_line[0])]
 
@@ -80,30 +80,37 @@ f_RBF, optimal_alpha_RBF = solution_RBF[0], solution_RBF[1] #fix bug here
 
 
 #PQK
-PQK_solver_test = PQK_solver({"encoding_circuit": Separable_rx_qiskit, 
-                              "num_qubits": 2,
-                              "num_layers": 5,
-                              },
-                              Executor("pennylane"), 
-                              envelope={"function": rbf_kernel_manual, 
+sigma_list = np.linspace(0.1, 1, 30)
+mse_list = np.zeros_like(sigma_list)
+#for idx, sigma in enumerate(sigma_list):
+sigma = 0.25
+PQK_solver_test = PQK_solver({"encoding_circuit": HardwareEfficientEmbeddingCircuit_qiskit, 
+                            "num_qubits": 2,
+                            "num_layers": 1,
+                            },
+                            Executor("pennylane"), 
+                            envelope={"function": rbf_kernel_manual, 
                                         "derivative_function": analytical_derivative_rbf_kernel, 
                                         "second_derivative_function": analytical_derivative_rbf_kernel_2,
-                                        "sigma": 0.5*(1/1.905)**2})
+                                        "sigma": sigma})
 
 solution_PQK, kernel_list_PQK = PQK_solver_test.solver(x_line, f_initial, L_functional = L_functional_1ODE)
 f_PQK, optimal_alpha_PQK = solution_PQK[0] ##fix bug here
+#mse_list[idx] = np.mean((f_PQK - f_odeint)**2)
 
-# = solution_PQK[1]
+
+
+
+    # = solution_PQK[1]
 
 
 FQK_solver_test = FQK_solver({"encoding_circuit": HardwareEfficientEmbeddingCircuit_qiskit, 
                               "num_qubits": 6,
-                              "num_layers": 2,
+                              "num_layers": 10,
                               "rotation_gate":"rx",},
-                              Executor("statevector_simulator"))
-#solution_FQK, kernel_listFQK = FQK_solver_test.solver(x_span, f_initial, g)
-#f_FQK = solution_FQK[0]
-#optimal_alpha_FQK = solution_FQK[1]
+                              Executor("statevector_simulator"),)
+solution_FQK, kernel_listFQK = FQK_solver_test.solver(x_line, f_initial, g)
+f_FQK, optimal_alpha_FQK = solution_FQK[0]
 
 
 
@@ -114,7 +121,7 @@ print(f_RBF)
 plt.plot(x_span_plot, f_odeint, "-*",label="odeint")
 plt.plot(x_span_plot, f_RBF, "x", label="RBF")
 plt.plot(x_span_plot, f_PQK, label="PQK")
-#plt.plot(x_span_plot, f_FQK, "-x",label="FQK")
+plt.plot(x_span_plot, f_FQK, "-x",label="FQK")
 #plt.plot(x_span, np.log(x_span), label="log(x)")
 #plt.ylim(-3, 3)
 
