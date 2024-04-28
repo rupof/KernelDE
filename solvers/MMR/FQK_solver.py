@@ -82,7 +82,7 @@ class FQK_solver:
             P0_temp = P0_temp.expand(P0_single_qubit)
         observable_tuple_list = P0_temp.to_list()
         pauli_str = [observable[0] for observable in observable_tuple_list]    
-        coefficients = [observable[1] for observable in observable_tuple_list]
+        coefficients = [np.real(observable[1]) for observable in observable_tuple_list]
         return CustomObservable(num_qubits, pauli_str, parameterized=True), coefficients
     
 
@@ -124,29 +124,27 @@ class FQK_solver:
         x_array = x_array.reshape(-1, 1) #reshape to column vector
         x_list_circuit_format = self.x_to_circuit_format(x_array)
 
-        print(x_list_circuit_format.shape)
 
-        output_f = qnn_.evaluate(x_list_circuit_format, [], coef, "f")["f"] #
+        output_f = qnn_.evaluate(x_list_circuit_format, [], coef, "f")["f"]  # (n*n, )
+        output_dfdx = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdx")["dfdx"] # (n*n, 2*m)
+
         print("output_f", output_f.shape)
-        output_dfdx = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdx")["dfdx"][:,0]
         print("output_dfdx", output_dfdx.shape)
         if len(f_initial) == 2:
-            output_dfdxdx = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdxdx")["dfdxdx"][:,0,0]
-            print("output_dfdxdx", output_dfdxdx.shape)
+            output_dfdxdx = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdxdx")["dfdxdx"] # (n*n, 
         else:
             output_dfdxdx = np.zeros_like(output_f)
 
 
-
-
         #reshape the output to the shape of the gram matrix
         output_f = output_f.reshape((len(x_array), len(x_array)))
-        output_dfdx = output_dfdx.reshape((len(x_array), len(x_array)))
-        output_dfdxdx = output_dfdxdx.reshape((len(x_array), len(x_array)))
+        output_dfdx = output_dfdx.reshape((len(x_array), len(x_array), len(x_array[0])*2))
+        output_dfdxdx = output_dfdxdx.reshape((len(x_array), len(x_array), len(x_array[0])*2, len(x_array[0])*2))
 
 
+        print("output_dfdx", output_dfdx.shape)
 
-        return output_f, output_dfdx, output_dfdxdx
+        return output_f, output_dfdx[:,:,0], output_dfdxdx[:,:,0,0]
 
    
     def solver(self, x_span, f_initial, L_functional):
@@ -170,11 +168,7 @@ class FQK_solver:
         ### PQK
 
         FQK_qnn, obs_coef = self.FQK_QNN()
-        print("Calculating the kernel and its derivatives")
         K_f, K_dfdx, K_dfdxdx = self.get_FQK_kernel_derivatives(x_span, FQK_qnn, obs_coef, f_initial)
-        print("K_f", K_f.shape)
-        print("K_dfdx", K_dfdx.shape)
-        print("K_dfdxdx", K_dfdxdx.shape)
         kernel_list = np.array([K_f, K_dfdx, K_dfdxdx])
         Solver_ = Solver(kernel_list, self.regularization_parameter)
         solution_ = Solver_.solver(x_span, f_initial, L_functional = L_functional)

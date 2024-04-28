@@ -1,7 +1,7 @@
 
 import numpy as np
 from squlearn import Executor
-from squlearn.encoding_circuit import ChebyshevRx, YZ_CX_EncodingCircuit
+from squlearn.encoding_circuit import *
 from squlearn.observables import SummedPaulis
 from squlearn.qnn import QNNRegressor, ODELoss
 from squlearn.qnn.lowlevel_qnn import LowLevelQNN
@@ -58,7 +58,7 @@ def grad_F_functional(loss_values):
 
     dFdf = -1*np.exp(-f[:])  # dF/df
     grad_envelope_list = np.zeros((3, x_span.shape[0], n_param)) # shape (3, n, p) 
-    grad_envelope_list[0,:,:] = np.tile(dFdf, (n_param, 1)).T # dF/df
+    grad_envelope_list[0,:,:] = np.tile(dFdf, (n_param, 1)).T # (dF/df,... p times) 
     grad_envelope_list[1,:,:] = 1  # dF/dfdx
     grad_envelope_list[2,:,:] = 0  # dF/dfdxdx
 
@@ -101,7 +101,7 @@ adam = Adam(options={"maxiter": 15, "tol": 0.00009})
 
 
 clf = QNNRegressor(
-    YZ_CX_EncodingCircuit(num_qubits, num_features, num_layers),
+    ChebyshevTower(num_qubits, num_features, num_layers= num_layers),
     SummedPaulis(num_qubits),
     Executor("pennylane"),
     loss_ODE,

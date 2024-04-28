@@ -88,7 +88,7 @@ class PQK_solver:
 
         x_list_circuit_format = x_array
         output_f_column = qnn_.evaluate(x_list_circuit_format, [], coef, "f")["f"] # #shape (n,)    
-        output_dfdx_qnn_column = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdx")["dfdx"][:,0] #shape (n, 1)
+        output_dfdx_qnn_column = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdx")["dfdx"] #shape (n, 1)
 
         #reshape the output_f_column, output_dfdx_qnn_column, output_dfdxdx_qnn_column to (n, n)
         #output_f_column = output_f_column.reshape(-1, 1) #reshape to column vector    
@@ -96,11 +96,16 @@ class PQK_solver:
         print("output_f_gramm_matrix", output_f_column.shape)
         print("output_dfdx_gramm_matrix", output_dfdx_qnn_column.shape)
 
-        output_f_gramm_matrix = self.envelope(output_f_column, output_f_column, **kwargs).reshape(len(x_array), len(x_array)) #shape (n, n) #to be checked
-        output_dfdx_gramm_matrix = self.analytical_derivative(output_f_column, output_f_column, **kwargs) * output_dfdx_qnn_column #shape (n, n) #to be checked
+        output_f_gramm_matrix = self.envelope(output_f_column, output_f_column, **kwargs) #shape (n, n) 
+        output_dfdx_gramm_matrix = self.analytical_derivative(output_f_column, output_f_column, **kwargs) * output_dfdx_qnn_column #shape (n, n) 
+
+        #Multiplication line above is the same as this:
+        #for i in range(len(output_dfdx_qnn_column)):
+        #    for j in range(len(output_dfdx_qnn_column)):
+        #        output_dfdx_gramm_matrix[i, j] = self.analytical_derivative(output_f_column, output_f_column, **kwargs)[i, j] * output_dfdx_qnn_column[i]
 
         if len(f_initial) == 2:
-            output_dfdxdx_qnn_column = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdxdx")["dfdxdx"][:,0,0]
+            output_dfdxdx_qnn_column = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdxdx")["dfdxdx"][:, 0]
             output_dfdxdx_gramm_matrix = self.analytical_derivative_2(output_f_column, output_f_column, **kwargs) * output_dfdx_qnn_column + self.analytical_derivative(output_f_column, output_f_column, **kwargs) * output_dfdxdx_qnn_column #shape (n, n) #to be checked
         else:
             output_dfdxdx_gramm_matrix = np.zeros_like(output_f_gramm_matrix)

@@ -10,7 +10,7 @@ from solvers.MMR.FQK_solver import FQK_solver
 from solvers.MMR.kernel_solver import Solver
 
 
-from utils.rbf_kernel_tools import *
+from utils.rbf_kernel_tools import analytical_derivative_rbf_kernel, analytical_derivative_rbf_kernel_2, rbf_kernel_manual
 from scipy.integrate import odeint
 
 
@@ -39,15 +39,17 @@ print("Number of cores:", num_cores)
 
 print("Starting the experiment list")
 
-x_span = np.linspace(0.0001, 1, 40)
+x_span = np.linspace(0.0001, 1.5*3.14, 50)
 
 
 cache = {}
 result_dic_list = []
 for idx, experiment in enumerate(experiment_list):
     print(f"Starting experiment {idx} with the following parameters: {experiment}")
-    g = experiment["g"]
+    loss = experiment["loss"]
     f_initial = experiment["f_initial"]
+    quantum_bandwidth = experiment["quantum_bandwidth"]
+    x_span *= quantum_bandwidth
 
 
     if experiment["method"] == "PQK":
@@ -55,6 +57,7 @@ for idx, experiment in enumerate(experiment_list):
                                 experiment["executor_type"], 
                                 envelope={"function": rbf_kernel_manual, 
                                             "derivative_function": analytical_derivative_rbf_kernel, 
+                                            "second_derivative_function": analytical_derivative_rbf_kernel_2,
                                             "sigma": experiment["sigma"]})
         dict_to_save = {"sigma": experiment["sigma"]}
 
@@ -62,22 +65,46 @@ for idx, experiment in enumerate(experiment_list):
         OSolver = FQK_solver(experiment["circuit_information"],
                                 experiment["executor_type"])
     elif experiment["method"] == "classical_RBF":
-        RBF_kernel_list = [rbf_kernel_manual(x_span, x_span, sigma = experiment["sigma"]), analytical_derivative_rbf_kernel(x_span, x_span, sigma = experiment["sigma"])]
+        RBF_kernel_list = [rbf_kernel_manual(x_span, x_span, sigma = experiment["sigma"]), 
+                           analytical_derivative_rbf_kernel(x_span, x_span, sigma = experiment["sigma"]),
+                           analytical_derivative_rbf_kernel_2(x_span, x_span, sigma = experiment["sigma"])]
         OSolver = Solver(RBF_kernel_list)
         dict_to_save = {"sigma": experiment["sigma"]}
+    """
+    elif experiment["method"] == "QNN":
+        loss_ODE = ODELoss(L_functional, grad_F_functional, initial_vec = initial_value, eta=1)
+        loss = SquaredLoss()
+        slsqp = SLSQP(options={"maxiter": 150, "ftol": 0.009})
+        adam = Adam(options={"maxiter": 15, "tol": 0.00009})
+
+        clf = QNNRegressor(
+            ChebyshevTower(num_qubits, num_features, num_layers= num_layers),
+            SummedPaulis(num_qubits),
+            Executor("pennylane"),
+            loss_ODE,
+            adam,
+            param_ini,
+            np.ones(num_qubits+1),
+            opt_param_op = False
+        )    
+
+        y_ODE = np.zeros((x_line.shape[0]))
+        clf._fit(x_line, y_ODE,  weights=None)
+        y_pred = clf.predict(x_line)
+    """
     
         
-    solution, kernel_list = OSolver.solver(x_span, f_initial, g)
+    solution, kernel_list = OSolver.solver(x_span, f_initial, loss)
     f_sol = solution[0]
     optimal_alpha = solution[1]
-    solution_label = f"{experiment['g_name']}_f_initial"
+    solution_label = f"{experiment['loss_name']}_f_initial"
     if solution_label in cache:
         numerical_solution = cache[solution_label]
     else:
-        numerical_solution = odeint(g, f_initial, x_span[:])
+        numerical_solution = odeint(experiment["derivatives_of_loss"], f_initial, x_span[:])
         cache[solution_label] = numerical_solution
     
-    mse = np.mean((f_sol - cache[solution_label]))**2
+    mse = np.mean((f_sol[0] - cache[solution_label][:,0]))**2
 
     dict_to_save = {"f_sol": f_sol, 
                     "optimal_alpha": optimal_alpha, 
@@ -95,14 +122,12 @@ for idx, experiment in enumerate(experiment_list):
                 dict_to_save["CI_executor_type_label"] = value.__name__
             except:
                 dict_to_save["CI_executor_type_label"] = value
-        elif key == "g":
-            pass
         else:
             dict_to_save["CI_"+ key] = value
     for key, value in experiment.items():
         if key == "circuit_information":
             pass
-        elif key == "g":
+        elif key == "loss" or "derivatives_of_loss" or "grad_loss":
             pass
         elif key == "executor_type":
             pass

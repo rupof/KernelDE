@@ -90,7 +90,7 @@ def L_functional_2ODE(f_alpha_tensor, x_span):
 
 #Classical Solver
 #RBF
-sigma = 0.8
+sigma = 2.5
 RBF_kernel_list = [rbf_kernel_manual(x_span, x_span, sigma = sigma), 
                    analytical_derivative_rbf_kernel(x_span, x_span, sigma = sigma), 
                    analytical_derivative_rbf_kernel_2(x_span, x_span, sigma = sigma)]
@@ -101,7 +101,7 @@ f_RBF, optimal_alpha_RBF = solution_RBF[0], solution_RBF[1] #fix bug here
 
 #PQK
 PQK_solver_test = PQK_solver({"encoding_circuit": HardwareEfficientEmbeddingCircuit_qiskit, 
-                              "num_qubits": 6,
+                              "num_qubits": 10,
                               "num_layers": 1,
                               },
                               Executor("pennylane"), 
@@ -110,17 +110,18 @@ PQK_solver_test = PQK_solver({"encoding_circuit": HardwareEfficientEmbeddingCirc
                                         "second_derivative_function": analytical_derivative_rbf_kernel_2,
                                         "sigma": sigma})
 
-solution_PQK, kernel_list_PQK = PQK_solver_test.solver(x_span, f_initial_vec, L_functional = L_functional_2ODE)
+c = 1
+solution_PQK, kernel_list_PQK = PQK_solver_test.solver(x_span*c, f_initial_vec, L_functional = L_functional_2ODE)
 f_PQK, optimal_alpha_PQK = solution_PQK[0] ##fix bug here
 
 
 FQK_solver_test = FQK_solver({"encoding_circuit": Separable_rx_qiskit,
-                              "num_qubits": 1,
+                              "num_qubits": 4,
                               "num_layers": 1
                               },
                               Executor("statevector_simulator"))
-solution_FQK, kernel_listFQK = FQK_solver_test.solver(x_span, f_initial_vec, L_functional = L_functional_2ODE)
-f_FQK, optimal_alpha_FQK = solution_FQK[0]
+#solution_FQK, kernel_listFQK = FQK_solver_test.solver(x_span, f_initial_vec, L_functional = L_functional_2ODE)
+#f_FQK, optimal_alpha_FQK = solution_FQK[0]
 
 #optimal_alpha_FQK = solution_FQK[1]
 
