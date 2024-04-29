@@ -119,8 +119,8 @@ experiment_PQK_combination_ho = get_experiment_combination_list([function_list_h
 
 encoding_circuit_list = ["YZ_CX_EncodingCircuit"]
 function_list_ho = [("harmonic_oscillator", [0, 1], np.linspace(0.0001, 1.5*3.14, 50))]
-num_qubits_list = [2]
-num_layers_list = [1]
+num_qubits_list = [8]
+num_layers_list = [3]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = [1]
 experiment_QNN_combination_ho = get_experiment_combination_list([function_list_ho, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN"], executor_type_list, quantum_bandwith])
@@ -133,7 +133,7 @@ num_qubits_list = [8]
 num_layers_list = [3]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = [1]
-experiment_QNN_combination_paper = get_experiment_combination_list([function_list_ho, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN"], executor_type_list, quantum_bandwith])
+experiment_QNN_combination_paper = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN"], executor_type_list, quantum_bandwith])
 
 
 experiment_list_total = [experiment_first_combination, #0
