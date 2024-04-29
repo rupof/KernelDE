@@ -221,5 +221,9 @@ circuits_dictionary_qiskit = {
     "HardwareEfficientEmbeddingCircuit": HardwareEfficientEmbeddingCircuit_qiskit,
     "HardwareEfficientEmbeddingCircuit_qiskit": HardwareEfficientEmbeddingCircuit_qiskit,
     "Hamiltonian_time_evolution_encoding": Hamiltonian_time_evolution_encoding_qiskit,
-    "NoCircuit": "NoCircuit"
+    "NoCircuit": "NoCircuit",
+    "YZ_CX_EncodingCircuit": YZ_CX_EncodingCircuit, 
+    "MultiControlEncodingCircuit": MultiControlEncodingCircuit,
+    "ChebyshevPQC": ChebyshevPQC, 
+    "ChebyshevRx": ChebyshevRx,
 }

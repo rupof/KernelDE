@@ -2,6 +2,7 @@ import numpy as np
 import sys
 from itertools import product
 from circuits.circuits import * 
+from DE_Library.diferential_equation_functionals import *
 
 
 
@@ -33,7 +34,7 @@ def get_experiment_combination_list(experimental_parameters):
             "sigma": sigma,
             "loss": mapping_of_loss_functions[loss_name],
             "derivatives_of_loss": mapping_of_derivatives_of_loss_functions[loss_name],
-            "grad_loss": mapping_of_loss_functions[loss_name],
+            "grad_loss": mapping_of_grad_of_loss_functions[loss_name],
             "method": method,
             "loss_name": loss_name,
             "executor_type": executor_type_dictionary[executor_type],
@@ -42,113 +43,6 @@ def get_experiment_combination_list(experimental_parameters):
         }
         experiment_list.append(experiment)
     return experiment_list
-
-
-def loss_paper(f_alpha_tensor, x):
-        """
-        0 = -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f - df/dx
-
-        solution: f(x) = np.exp(-lamb * x * k) * np.cos(lamb * x), f(0) = 1
-        """
-        f = f_alpha_tensor[0]
-        dfdx = f_alpha_tensor[1]
-
-        lamb = 20
-        k = 0.1
-        return -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f - dfdx
-
-def derivatives_loss_paper(f_alpha_tensor, x):
-        """
-        0 = -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f - df/dx
-
-        solution: f(x) = np.exp(-lamb * x * k) * np.cos(lamb * x), f(0) = 1
-        """
-        f = f_alpha_tensor[0]
-        
-        lamb = 20
-        k = 0.1
-
-        return [-lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f]
-
-def loss_log_ode(f_alpha_tensor, x):
-    """
-    0 = lamb * np.exp(f * k) - df/dx
-    f(0.001) = np.log(0.001)
-
-    solution: f(x) = np.log(x)
-    """
-    f = f_alpha_tensor[0]
-    dfdx = f_alpha_tensor[1]
-    lamb = 1
-    k = 1
-    return np.exp(-f*k)*lamb - dfdx 
-
-def derivatives_loss_log_ode(f_alpha_tensor, x):
-    """
-    0 = lamb * np.exp(f * k) - df/dx
-    f(0.001) = np.log(0.001)
-
-    solution: f(x) = np.log(x)
-    """
-    f = f_alpha_tensor[0]
-    lamb = 1
-    k = 1
-    return [np.exp(-f*k)*lamb]
-
-
-def loss_polynomial_with_exp(f_alpha_tensor, x):
-    """
-    0 = 2*f+4*cos(x)-8*sin(x) - df/dx 
-    f(0) = 3
-
-    solution: f(x) = 3*exp(2*x) + 4*sin(x)
-    """
-    f = f_alpha_tensor[0]
-    dfdx = f_alpha_tensor[1]
-
-    return 2*f+4*np.cos(x)-8*np.sin(x)-dfdx
-
-def derivatives_loss_polynomial_with_exp(f_alpha_tensor, x):
-    """
-    0 = 2*f+4*cos(x)-8*sin(x) - df/dx 
-    f(0) = 3
-
-    solution: f(x) = 3*exp(2*x) + 4*sin(x)
-    """
-    f = f_alpha_tensor[0]
-
-    return [2*f+4*np.cos(x)-8*np.sin(x)]
-
-def loss_harmonic_oscillator(f_alpha_tensor, x_span):
-    """
-    L_functional = dfdx - g(f(x), x)
-    """
-    f = f_alpha_tensor[0]
-    dfdx = f_alpha_tensor[1]
-    dfdx2 = f_alpha_tensor[2]
-    return dfdx2 + f
-
-def derivatives_loss_harmonic_oscillator(f_alpha_tensor, x_span):
-    """
-    L_functional = dfdx - g(f(x), x)
-    """
-    f = f_alpha_tensor[0]
-    dfdx = f_alpha_tensor[1]
-    return [dfdx, -f]
-
-mapping_of_loss_functions = {
-    "paper": loss_paper,
-    "log_ode": loss_log_ode,
-    "polynomial_with_exp": loss_polynomial_with_exp,
-    "harmonic_oscillator": loss_harmonic_oscillator
-}
-
-mapping_of_derivatives_of_loss_functions = {
-    "paper": derivatives_loss_paper,
-    "log_ode": derivatives_loss_log_ode,
-    "polynomial_with_exp": derivatives_loss_polynomial_with_exp,
-    "harmonic_oscillator": derivatives_loss_harmonic_oscillator
-}
 
 
 
@@ -214,6 +108,15 @@ experiment_PQK_combination_ho = get_experiment_combination_list([function_list_h
 
 ###############
 
+encoding_circuit_list = ["YZ_CX_EncodingCircuit"]
+function_list_ho = [("harmonic_oscillator", [0, 1])]
+num_qubits_list = [2]
+num_layers_list = [1]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = [1]
+experiment_QNN_combination_ho = get_experiment_combination_list([function_list_ho, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN"], executor_type_list, quantum_bandwith])
+
+
 
 experiment_list_total = [experiment_first_combination, #0
                         experiment_better_combination, #1
@@ -222,8 +125,7 @@ experiment_list_total = [experiment_first_combination, #0
                         experiment_FQK_combination_starting, #4
                         experiment_RBF_combination_starting, # 5
                         experiment_PQK_combination_starting, #6
-                        experiment_PQK_combination_ho #7
-
-
+                        experiment_PQK_combination_ho, #7
+                        experiment_QNN_combination_ho #8
                         ] 
 

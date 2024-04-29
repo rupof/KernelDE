@@ -8,6 +8,10 @@ import time
 from solvers.MMR.PQK_solver import PQK_solver 
 from solvers.MMR.FQK_solver import FQK_solver
 from solvers.MMR.kernel_solver import Solver
+from squlearn.qnn.loss import ODELoss
+from squlearn.optimizers import SLSQP, Adam
+from squlearn.qnn import QNNRegressor
+from squlearn.observables import *
 
 
 from utils.rbf_kernel_tools import analytical_derivative_rbf_kernel, analytical_derivative_rbf_kernel_2, rbf_kernel_manual
@@ -47,6 +51,7 @@ result_dic_list = []
 for idx, experiment in enumerate(experiment_list):
     print(f"Starting experiment {idx} with the following parameters: {experiment}")
     loss = experiment["loss"]
+    grad_loss = experiment["grad_loss"]
     f_initial = experiment["f_initial"]
     quantum_bandwidth = experiment["quantum_bandwidth"]
     x_span *= quantum_bandwidth
@@ -70,33 +75,43 @@ for idx, experiment in enumerate(experiment_list):
                            analytical_derivative_rbf_kernel_2(x_span, x_span, sigma = experiment["sigma"])]
         OSolver = Solver(RBF_kernel_list)
         dict_to_save = {"sigma": experiment["sigma"]}
-    """
     elif experiment["method"] == "QNN":
-        loss_ODE = ODELoss(L_functional, grad_F_functional, initial_vec = initial_value, eta=1)
-        loss = SquaredLoss()
-        slsqp = SLSQP(options={"maxiter": 150, "ftol": 0.009})
-        adam = Adam(options={"maxiter": 15, "tol": 0.00009})
+        loss_ODE = ODELoss(loss, grad_loss, initial_vec = f_initial, eta=1)
+        Optimizer = Adam(options={"maxiter": 350, "tol": 0.00009})
+        EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
+        #pop the encoding_circuit from the dict
+        experiment["circuit_information"].pop("encoding_circuit")
+        encoding_circuit = EncodingCircuit(num_features = 1,  **experiment["circuit_information"])
+        num_qubits = experiment["circuit_information"]["num_qubits"]
+        Observables = SummedPaulis(num_qubits)                                                      
+        param_ini = encoding_circuit.generate_initial_parameters()
+        param_obs = np.ones(num_qubits+1)
 
         clf = QNNRegressor(
-            ChebyshevTower(num_qubits, num_features, num_layers= num_layers),
+            encoding_circuit,
             SummedPaulis(num_qubits),
-            Executor("pennylane"),
+            experiment["executor_type"],
             loss_ODE,
-            adam,
+            Optimizer,
             param_ini,
-            np.ones(num_qubits+1),
+            param_obs,
             opt_param_op = False
         )    
 
-        y_ODE = np.zeros((x_line.shape[0]))
-        clf._fit(x_line, y_ODE,  weights=None)
-        y_pred = clf.predict(x_line)
-    """
+        y_ODE = np.zeros((x_span.shape[0]))
+        clf._fit(x_span, y_ODE,  weights=None)
+        y_pred = clf.predict(x_span)
+        params = clf.get_params()
     
-        
-    solution, kernel_list = OSolver.solver(x_span, f_initial, loss)
-    f_sol = solution[0]
-    optimal_alpha = solution[1]
+    if experiment["method"] != "QNN":    
+        solution, kernel_list = OSolver.solver(x_span, f_initial, loss)
+        f_sol = solution[0]
+        optimal_alpha = solution[1]
+    else:
+        f_sol = y_pred
+        optimal_alpha = params
+
+
     solution_label = f"{experiment['loss_name']}_f_initial"
     if solution_label in cache:
         numerical_solution = cache[solution_label]
