@@ -43,13 +43,13 @@ print("Number of cores:", num_cores)
 
 print("Starting the experiment list")
 
-x_span = np.linspace(0.0001, 1.5*3.14, 50)
 
 
 cache = {}
 result_dic_list = []
 for idx, experiment in enumerate(experiment_list):
     print(f"Starting experiment {idx} with the following parameters: {experiment}")
+    x_span = experiment["x_domain"]
     loss = experiment["loss"]
     grad_loss = experiment["grad_loss"]
     f_initial = experiment["f_initial"]
@@ -77,7 +77,7 @@ for idx, experiment in enumerate(experiment_list):
         dict_to_save = {"sigma": experiment["sigma"]}
     elif experiment["method"] == "QNN":
         loss_ODE = ODELoss(loss, grad_loss, initial_vec = f_initial, eta=1)
-        Optimizer = Adam(options={"maxiter": 350, "tol": 0.00009})
+        Optimizer = Adam(options={"maxiter": 350, "tol": 0.0009})
         EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
         #pop the encoding_circuit from the dict
         experiment["circuit_information"].pop("encoding_circuit")
@@ -101,7 +101,7 @@ for idx, experiment in enumerate(experiment_list):
         y_ODE = np.zeros((x_span.shape[0]))
         clf._fit(x_span, y_ODE,  weights=None)
         y_pred = clf.predict(x_span)
-        params = clf.get_params()
+        params = clf._param
     
     if experiment["method"] != "QNN":    
         solution, kernel_list = OSolver.solver(x_span, f_initial, loss)
@@ -109,6 +109,7 @@ for idx, experiment in enumerate(experiment_list):
         optimal_alpha = solution[1]
     else:
         f_sol = y_pred
+        print(params)
         optimal_alpha = params
 
 
@@ -116,6 +117,7 @@ for idx, experiment in enumerate(experiment_list):
     if solution_label in cache:
         numerical_solution = cache[solution_label]
     else:
+        print("Experiment ", experiment["loss_name"], " with f_initial")
         numerical_solution = odeint(experiment["derivatives_of_loss"], f_initial, x_span[:])
         cache[solution_label] = numerical_solution
     

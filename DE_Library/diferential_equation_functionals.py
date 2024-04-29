@@ -12,16 +12,18 @@ def get_differentials(f_alpha_tensor, x_span = None):
             dfdxdx = loss_values["dfdxdx"][:,0,0]
             return x, f, dfdx, dfdxdx
         except:
-            return x, f, dfdx
+            return x, f, dfdx, np.zeros_like(f)
     else: #Then, we are using a Kernel
+        print("Kernel", len(f_alpha_tensor))
         x = x_span
         f = f_alpha_tensor[0]
         dfdx = f_alpha_tensor[1]
         try: 
             dfdxdx = f_alpha_tensor[2]
-            return x, f, dfdx, dfdxdx
         except:
-            return x, f, dfdx
+            dfdxdx = np.zeros_like(f)
+        return x, f, dfdx, dfdxdx
+
     
 
 
@@ -30,13 +32,11 @@ def loss_paper(f_alpha_tensor, x_span = None):
     0 = -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f - df/dx
     solution: f(x) = np.exp(-lamb * x * k) * np.cos(lamb * x), f(0) = 1
     """
-    x, f, dfdx = get_differentials(f_alpha_tensor, x_span)
+    x, f, dfdx, dfdxdx = get_differentials(f_alpha_tensor, x_span)
     lamb = 1
     k = 1
 
     return -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f - dfdx
-
-
 
 
 def derivatives_loss_paper(f_alpha_tensor, x_span = None):
@@ -45,12 +45,43 @@ def derivatives_loss_paper(f_alpha_tensor, x_span = None):
 
         solution: f(x) = np.exp(-lamb * x * k) * np.cos(lamb * x), f(0) = 1
         """
-        x, f, dfdx = get_differentials(f_alpha_tensor, x_span)
-        
+        if len(f_alpha_tensor) == 1:
+            f = f_alpha_tensor[0]
+            x = x_span
+        else:
+            x, f, dfdx, dfdxdx = get_differentials(f_alpha_tensor, x_span)
+
         lamb = 20
         k = 0.1
 
         return [-lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f]
+
+def grad_loss_paper(loss_values, x_span = None):
+    """
+    n = x_span.shape[0] number of points
+    m = x_span.shape[1] number of dimensions (typically m=1)
+
+    F[x, x_, x__] = F(x, x_, x__)
+
+    grad_F = (F(x, x_, x__)dx, F(x, x_, x__)dx_, F(x, x_, x__)dx__)
+
+    -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f - dfdx
+
+    grad_F = (-lamb*k, -1, 0)
+    """
+    lamb = 20
+    k = 0.1
+    x, f, dfdx, dfdxdx = get_differentials(loss_values, x_span)
+
+    
+    dfdp = loss_values["dfdp"] # shape (n, p)
+    n_param = dfdp.shape[1]
+
+    grad_envelope_list = np.zeros((3, x.shape[0], n_param)) # shape (3, n, p) 
+    grad_envelope_list[0,:,:] = -lamb*k # (dF/df,... p times) 
+    grad_envelope_list[1,:,:] = -1  # dF/dfdx
+    grad_envelope_list[2,:,:] =  0  # dF/dfdxdx
+    return grad_envelope_list
 
 def loss_log_ode(f_alpha_tensor, x_span = None):
     """
@@ -95,15 +126,8 @@ def loss_polynomial_with_exp(f_alpha_tensor, x_span = None):
 
     solution: f(x) = 3*exp(2*x) + 4*sin(x)
     """
-    if x_span is None:
-        loss_values = f_alpha_tensor
-        x = loss_values["x"]
-        f = loss_values["f"]
-        dfdx = loss_values["dfdx"][:,0]
-    else:
-        x = x_span
-        f = f_alpha_tensor[0]
-        dfdx = f_alpha_tensor[1]
+    x, f, dfdx, dfdxdx = get_differentials(f_alpha_tensor, x_span)
+
     return 2*f+4*np.cos(x)-8*np.sin(x) - dfdx
 
 
@@ -115,7 +139,6 @@ def derivatives_loss_polynomial_with_exp(f_alpha_tensor, x_span = None):
     solution: f(x) = 3*exp(2*x) + 4*sin(x)
     """
     f = f_alpha_tensor[0]
-
     x = x_span
 
     return [2*f+4*np.cos(x)-8*np.sin(x)]
@@ -194,7 +217,7 @@ mapping_of_derivatives_of_loss_functions = {
 }
 
 mapping_of_grad_of_loss_functions = {
-    "paper": derivatives_loss_paper,
+    "paper": grad_loss_paper,
     "log_ode": derivatives_loss_log_ode,
     "polynomial_with_exp": derivatives_loss_polynomial_with_exp,
     "harmonic_oscillator": grad_loss_harmonic_oscillator,
