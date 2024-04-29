@@ -7,7 +7,8 @@ from DE_Library.diferential_equation_functionals import *
 
 
 executor_type_dictionary = {
-    "statevector_simulator": Executor("pennylane"),
+    "statevector_simulator": Executor("statevector_simulator"),
+    "pennylane": Executor("pennylane")
 }
 
 def get_experiment_combination_list(experimental_parameters):
@@ -132,7 +133,7 @@ num_qubits_list = [8]
 num_layers_list = [3]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = [1]
-experiment_QNN_combination_paper = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN"], executor_type_list, quantum_bandwith])
+experiment_QNN_combination_paper = get_experiment_combination_list([function_list_ho, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN"], executor_type_list, quantum_bandwith])
 
 
 experiment_list_total = [experiment_first_combination, #0
