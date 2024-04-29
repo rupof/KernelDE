@@ -20,7 +20,6 @@ def get_experiment_combination_list(experimental_parameters):
     """
     experiment_list = []
     sorted_parameters = experimental_parameters
-    print(sorted_parameters)
     for params in product(*sorted_parameters):
         function_pair, encoding_circuit, num_qubits, num_layers, sigma, method, executor_type, quantum_bandwidth = params
         loss_name = function_pair[0]
@@ -127,12 +126,13 @@ experiment_QNN_combination_ho = get_experiment_combination_list([function_list_h
 
 
 encoding_circuit_list = ["YZ_CX_EncodingCircuit"]
-function_list_ho = [("paper", [1], np.linspace(0.0001, 2, 20))]
+function_list = [("paper", [1], np.linspace(0.0001, 2, 20))]
+executor_type_list = ["pennylane"]    
 num_qubits_list = [8]
 num_layers_list = [3]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = [1]
-experiment_QNN_combination_paper = get_experiment_combination_list([function_list_ho, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN"], executor_type_list, quantum_bandwith])
+experiment_QNN_combination_paper = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN"], executor_type_list, quantum_bandwith])
 
 
 experiment_list_total = [experiment_first_combination, #0
