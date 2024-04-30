@@ -75,8 +75,9 @@ for idx, experiment in enumerate(experiment_list):
                            analytical_derivative_rbf_kernel_2(x_span, x_span, sigma = experiment["sigma"])]
         OSolver = Solver(RBF_kernel_list)
         dict_to_save = {"sigma": experiment["sigma"]}
-    elif experiment["method"] == "QNN":
-        loss_ODE = ODELoss(loss, grad_loss, initial_vec = f_initial, eta=1)
+    elif experiment["method"].startswith("QNN"):
+        method, boundary_handling = experiment["method"].split("_")
+        loss_ODE = ODELoss(loss, grad_loss, initial_vec = f_initial, eta=1, boundary_handling = boundary_handling)
         Optimizer = Adam(options={"maxiter": 350, "tol": 0.0009})
         EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
         #pop the encoding_circuit from the dict
@@ -103,7 +104,7 @@ for idx, experiment in enumerate(experiment_list):
         y_pred = clf.predict(x_span)
         params = clf._param
     
-    if experiment["method"] != "QNN":    
+    if experiment["method"].startswith("QNN") != "QNN":    
         solution, kernel_list = OSolver.solver(x_span, f_initial, loss)
         f_sol = solution[0]
         optimal_alpha = solution[1]
