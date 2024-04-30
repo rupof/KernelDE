@@ -26,6 +26,63 @@ def get_differentials(f_alpha_tensor, x_span = None):
 
     
 
+    
+def loss_paper_decay_QNN(f_alpha_tensor, x_span = None):
+    """
+    df/dx + lamb * f*(k + tan(lamb*x)) = 0
+    f(0) = 1
+    solution: f(x) = np.exp(-lamb * x * k) * np.cos(lamb * x) + cte, f(0) = 1
+    """
+    x, f, dfdx, dfdxdx = get_differentials(f_alpha_tensor, x_span)
+    lamb = 8
+    k = 0.1
+
+    return dfdx + lamb * f * (k + np.tan(lamb*x))
+
+def derivatives_loss_paper_decay_QNN(f_alpha_tensor, x_span = None):
+        """
+        df/dx + lamb * f*(k + tan(lamb*x)) = 0
+
+        solution: f(x) = np.exp(-lamb * x * k) * np.cos(lamb * x), f(0) = 1
+        """
+        if len(f_alpha_tensor) == 1:
+            f = f_alpha_tensor[0]
+            x = x_span
+        else:
+            x, f, dfdx, dfdxdx = get_differentials(f_alpha_tensor, x_span)
+
+        lamb = 8
+        k = 0.1
+
+        return [-lamb * f * (k + np.tan(lamb*x))]
+
+def grad_loss_paper_decay_QNN(loss_values, x_span = None):
+    """
+    n = x_span.shape[0] number of points
+    m = x_span.shape[1] number of dimensions (typically m=1)
+
+    F[x, x_, x__] = F(x, x_, x__)
+
+    grad_F = (F(x, x_, x__)dx, F(x, x_, x__)dx_, F(x, x_, x__)dx__)
+
+
+    grad_F = (-lamb*k, -1, 0)
+    """
+    lamb = 8
+    k = 0.1
+    x, f, dfdx, dfdxdx = get_differentials(loss_values, x_span)
+
+    
+    dfdp = loss_values["dfdp"] # shape (n, p)
+    n_param = dfdp.shape[1]
+
+    dFdf = lamb * (k + np.tan(lamb*x))
+
+    grad_envelope_list = np.zeros((3, x.shape[0], n_param)) # shape (3, n, p)
+    grad_envelope_list[0,:,:] = np.tile(dFdf, (n_param, 1)).T  
+    grad_envelope_list[1,:,:] = 1  # dF/dfdx
+    grad_envelope_list[2,:,:] =  0  # dF/dfdxdx
+    return grad_envelope_list
 
 def loss_paper(f_alpha_tensor, x_span = None):
     """
@@ -206,14 +263,16 @@ mapping_of_loss_functions = {
     "paper": loss_paper,
     "log_ode": loss_log_ode,
     "polynomial_with_exp": loss_polynomial_with_exp,
-    "harmonic_oscillator": loss_harmonic_oscillator
+    "harmonic_oscillator": loss_harmonic_oscillator,
+    "paper_decay_QNN": loss_paper_decay_QNN
 }
 
 mapping_of_derivatives_of_loss_functions = {
     "paper": derivatives_loss_paper,
     "log_ode": derivatives_loss_log_ode,
     "polynomial_with_exp": derivatives_loss_polynomial_with_exp,
-    "harmonic_oscillator": derivatives_loss_harmonic_oscillator
+    "harmonic_oscillator": derivatives_loss_harmonic_oscillator,
+    "paper_decay_QNN": derivatives_loss_paper_decay_QNN
 }
 
 mapping_of_grad_of_loss_functions = {
@@ -221,4 +280,5 @@ mapping_of_grad_of_loss_functions = {
     "log_ode": derivatives_loss_log_ode,
     "polynomial_with_exp": derivatives_loss_polynomial_with_exp,
     "harmonic_oscillator": grad_loss_harmonic_oscillator,
+    "paper_decay_QNN": grad_loss_paper_decay_QNN
 }

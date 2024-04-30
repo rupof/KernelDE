@@ -137,6 +137,28 @@ gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
 experiment_QNN_combination_paper = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN"], executor_type_list, quantum_bandwith])
 
+encoding_circuit_list = ["ChebyshevTowerAndHEE"]
+function_list = [("paper", [1], np.linspace(0, 0.9, 20))]
+executor_type_list = ["pennylane"]    
+num_qubits_list = [6]
+num_layers_list = [5]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+experiment_QNN_combination_paper_Chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN"], executor_type_list, quantum_bandwith])
+
+
+encoding_circuit_list = ["ChebyshevTowerAndHEE"]
+function_list = [("paper_decay_QNN", [1], np.linspace(0, 0.9, 20))]
+executor_type_list = ["pennylane"]    
+num_qubits_list = [6]
+num_layers_list = [5]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+experiment_QNN_decay_combination_paper_Chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN"], executor_type_list, quantum_bandwith])
+
+
 
 experiment_list_total = [experiment_first_combination, #0
                         experiment_better_combination, #1
@@ -147,6 +169,8 @@ experiment_list_total = [experiment_first_combination, #0
                         experiment_PQK_combination_starting, #6
                         experiment_PQK_combination_ho, #7
                         experiment_QNN_combination_ho, #8
-                        experiment_QNN_combination_paper #9
+                        experiment_QNN_combination_paper, #9
+                        experiment_QNN_combination_paper_Chebyshev, #10
+                        experiment_QNN_decay_combination_paper_Chebyshev, #11
                         ] 
 

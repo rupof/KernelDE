@@ -205,6 +205,12 @@ def FQK_kernel_circuit(encoding_circuit, num_qubits, **kwargs):
     return circuit
 
 
+def ChebyshevTowerAndHEE(num_qubits, num_features, num_layers):
+    circuit =  ChebyshevTower(num_qubits=num_qubits, num_features=num_features, num_chebyshev=num_qubits, alpha = 2, hadamard_start=False)
+    circuit += HEE_rzrxrz(num_qubits, num_features, num_layers)
+    return circuit
+
+
 circuits_dictionary = {
     "IQPLikeCircuit": IQPLikeCircuit,
     "Separable_rx": Separable_rx,
@@ -226,4 +232,5 @@ circuits_dictionary_qiskit = {
     "MultiControlEncodingCircuit": MultiControlEncodingCircuit,
     "ChebyshevPQC": ChebyshevPQC, 
     "ChebyshevRx": ChebyshevRx,
+    "ChebyshevTowerAndHEE": ChebyshevTowerAndHEE
 }
