@@ -1,4 +1,5 @@
 from squlearn.encoding_circuit import *
+from squlearn.encoding_circuit import HEE_rzrxrz
 
 import numpy as np
 #import reduce
