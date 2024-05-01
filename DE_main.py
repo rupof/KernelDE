@@ -104,7 +104,7 @@ for idx, experiment in enumerate(experiment_list):
         y_pred = clf.predict(x_span)
         params = clf._param
     
-    if experiment["method"].startswith("QNN") != "QNN":    
+    if experiment["method"].startswith("QNN") == False:    
         solution, kernel_list = OSolver.solver(x_span, f_initial, loss)
         f_sol = solution[0]
         optimal_alpha = solution[1]
