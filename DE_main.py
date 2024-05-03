@@ -123,7 +123,7 @@ for idx, experiment in enumerate(experiment_list):
         numerical_solution = odeint(experiment["derivatives_of_loss"], f_initial, x_span[:])
         cache[solution_label] = numerical_solution
     
-    mse = np.mean((f_sol[0] - cache[solution_label][:,0]))**2
+    mse = np.mean((f_sol - cache[solution_label][:,0]))**2
 
     dict_to_save = {"f_sol": f_sol, 
                     "optimal_alpha": optimal_alpha, 

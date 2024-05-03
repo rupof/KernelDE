@@ -224,7 +224,7 @@ def SimpleAnalyticalCircuit_qiskit(num_qubits, num_layers):
 
     QC.rx(features[0], 0)
     for i in range(0, num_layers):
-        QC.ry(parameters[i], 0)
+        QC.rx(parameters[i], 0)
     
     return QC
 

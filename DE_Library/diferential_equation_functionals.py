@@ -203,7 +203,34 @@ def loss_log_ode(f_alpha_tensor, x_span = None):
     k = 1
     return dfdx - np.exp(-f*k)*lamb 
 
+def grad_loss_log_ode(loss_values, x_span = None):
+    """
+    n = x_span.shape[0] number of points
+    m = x_span.shape[1] number of dimensions (typically m=1)
 
+    F[x, x_, x__] = F(x, x_, x__)
+
+    grad_F = (F(x, x_, x__)dx, F(x, x_, x__)dx_, F(x, x_, x__)dx__)
+
+    F = lamb * np.exp(f * k) - df/dx
+
+    grad_F = (-lamb*k, -1, 0)
+    """
+    lamb = 1
+    k = 1
+    x, f, dfdx, dfdxdx = get_differentials(loss_values, x_span)
+
+    
+    dfdp = loss_values["dfdp"] # shape (n, p)
+    n_param = dfdp.shape[1]
+
+    dFdf = lamb*k*np.exp(-f*k)
+
+    grad_envelope_list = np.zeros((3, x.shape[0], n_param)) # shape (3, n, p)
+    grad_envelope_list[0,:,:] = np.tile(dFdf, (n_param, 1)).T  
+    grad_envelope_list[1,:,:] =  1  # dF/dfdx
+    grad_envelope_list[2,:,:] =  0  # dF/dfdxdx
+    return grad_envelope_list
 
 def derivatives_loss_log_ode(f_alpha_tensor, x_span = None):
     """
@@ -321,7 +348,7 @@ mapping_of_derivatives_of_loss_functions = {
 
 mapping_of_grad_of_loss_functions = {
     "paper": grad_loss_paper,
-    "log_ode": derivatives_loss_log_ode,
+    "log_ode": grad_loss_log_ode,
     "polynomial_with_exp": derivatives_loss_polynomial_with_exp,
     "harmonic_oscillator": grad_loss_harmonic_oscillator,
     "paper_decay_QNN": grad_loss_paper_decay_QNN, 
