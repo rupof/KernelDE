@@ -119,11 +119,11 @@ FQK_solver_test = FQK_solver({"encoding_circuit": Separable_rx_qiskit,
                               "num_qubits": 4,
                               "num_layers": 1
                               },
-                              Executor("statevector_simulator"))
-#solution_FQK, kernel_listFQK = FQK_solver_test.solver(x_span, f_initial_vec, L_functional = L_functional_2ODE)
-#f_FQK, optimal_alpha_FQK = solution_FQK[0]
+                              Executor("pennylane"))
+solution_FQK, kernel_listFQK = FQK_solver_test.solver(x_span, f_initial_vec, L_functional = L_functional_2ODE)
+f_FQK, optimal_alpha_FQK = solution_FQK[0]
 
-#optimal_alpha_FQK = solution_FQK[1]
+optimal_alpha_FQK = solution_FQK[1]
 
 
 
@@ -133,7 +133,7 @@ x_span_plot = x_span.reshape(-1, 1)
 plt.plot(x_span_plot, f_odeint[:,0], "-*",label="odeint")
 plt.plot(x_span_plot, f_RBF, label="RBF")
 plt.plot(x_span_plot, f_PQK, label="PQK")
-#plt.plot(x_span_plot, f_FQK, "-x",label="FQK")
+plt.plot(x_span_plot, f_FQK, "-x",label="FQK")
 #plt.plot(x_span, np.log(x_span), label="log(x)")
 #plt.ylim(-3, 3)
 

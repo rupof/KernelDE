@@ -78,19 +78,20 @@ for idx, experiment in enumerate(experiment_list):
     elif experiment["method"].startswith("QNN"):
         method, boundary_handling = experiment["method"].split("_")
         loss_ODE = ODELoss(loss, grad_loss, initial_vec = f_initial, eta=1, boundary_handling = boundary_handling)
-        Optimizer = Adam(options={"maxiter": 350, "tol": 0.0009})
+        Optimizer = Adam(options={"maxiter": 450, "tol": 0.000009, "lr":0.01 })
         EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
         #pop the encoding_circuit from the dict
         experiment["circuit_information"].pop("encoding_circuit")
         encoding_circuit = EncodingCircuit(num_features = 1,  **experiment["circuit_information"])
         num_qubits = experiment["circuit_information"]["num_qubits"]
-        Observables = SummedPaulis(num_qubits)                                                      
-        param_ini = encoding_circuit.generate_initial_parameters()
-        param_obs = np.ones(num_qubits+1)
+        Observables = SummedPaulis(num_qubits, include_identity=False)                                                      
+        param_ini = encoding_circuit.generate_initial_parameters(seed=1)
+        param_obs = Observables.generate_initial_parameters(seed=1)
+         #np.ones(num_qubits+1)
 
         clf = QNNRegressor(
             encoding_circuit,
-            SummedPaulis(num_qubits),
+            Observables,
             experiment["executor_type"],
             loss_ODE,
             Optimizer,

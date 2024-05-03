@@ -75,8 +75,8 @@ def L_functional_1ODE(f_alpha_tensor, x_span):
 #RBF
 RBF_kernel_list = [rbf_kernel_manual(x_line, x_line, sigma = 0.2), analytical_derivative_rbf_kernel(x_line, x_line, sigma = 0.2), analytical_derivative_rbf_kernel_2(x_line, x_line, sigma = 0.2)]
 Solver_test = Solver(RBF_kernel_list, regularization_parameter=1)
-#solution_RBF, _ = Solver_test.solver(x_line, f_initial, L_functional = L_functional_1ODE)
-#f_RBF, optimal_alpha_RBF = solution_RBF[0], solution_RBF[1] #fix bug here
+solution_RBF, _ = Solver_test.solver(x_line, f_initial, L_functional = L_functional_1ODE)
+f_RBF, optimal_alpha_RBF = solution_RBF[0], solution_RBF[1] #fix bug here
 
 
 #PQK
@@ -85,7 +85,7 @@ mse_list = np.zeros_like(sigma_list)
 #for idx, sigma in enumerate(sigma_list):
 sigma = 1.5
 PQK_solver_test = PQK_solver({"encoding_circuit": Separable_rx_qiskit, 
-                            "num_qubits": 1, #8
+                            "num_qubits": 2, #8
                             "num_layers": 2,
                             },
                             Executor("pennylane"), 
@@ -95,8 +95,8 @@ PQK_solver_test = PQK_solver({"encoding_circuit": Separable_rx_qiskit,
                                         "sigma": sigma})
 
 
-#solution_PQK, kernel_list_PQK = PQK_solver_test.solver(x_line, f_initial, L_functional = L_functional_1ODE)
-#f_PQK, optimal_alpha_PQK = solution_PQK[0] ##fix bug here
+solution_PQK, kernel_list_PQK = PQK_solver_test.solver(x_line, f_initial, L_functional = L_functional_1ODE)
+f_PQK, optimal_alpha_PQK = solution_PQK[0] ##fix bug here
 #mse_list[idx] = np.mean((f_PQK - f_odeint)**2)
 
 
@@ -106,8 +106,8 @@ PQK_solver_test = PQK_solver({"encoding_circuit": Separable_rx_qiskit,
 
 
 FQK_solver_test = FQK_solver({"encoding_circuit": HardwareEfficientEmbeddingCircuit_qiskit, 
-                              "num_qubits": 1, #6
-                              "num_layers": 10,
+                              "num_qubits": 7, #6
+                              "num_layers": 2,
                               },
                               Executor("pennylane"),)
 solution_FQK, kernel_listFQK = FQK_solver_test.solver(x_line, f_initial, L_functional_1ODE)
@@ -119,8 +119,8 @@ f_FQK, optimal_alpha_FQK = solution_FQK[0]
 
 x_span_plot = x_line.reshape(-1, 1)
 plt.plot(x_span_plot, f_odeint, "-*",label="odeint")
-#plt.plot(x_span_plot, f_RBF, "x", label="RBF")
-#plt.plot(x_span_plot, f_PQK, label="PQK")
+plt.plot(x_span_plot, f_RBF, "x", label="RBF")
+plt.plot(x_span_plot, f_PQK, label="PQK")
 plt.plot(x_span_plot, f_FQK, "-x",label="FQK")
 #plt.plot(x_span, np.log(x_span), label="log(x)")
 #plt.ylim(-3, 3)

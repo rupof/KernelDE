@@ -170,6 +170,29 @@ sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
 experiment_QNN_decay_combination_paper_floating_Chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_floating"], executor_type_list, quantum_bandwith])
 
 
+encoding_circuit_list = ["ChebyshevTowerAndHEE"]
+function_list = [("paper_decay_QNN", [1], np.linspace(0, 0.9, 3))]
+executor_type_list = ["pennylane"]    
+num_qubits_list = [2]
+num_layers_list = [10]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+experiment_QNN_test = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_floating"], executor_type_list, quantum_bandwith])
+
+
+encoding_circuit_list = ["SimpleAnalyticalCircuit"]
+function_list = [("simple_test_QNN", [1], np.linspace(0, 2.3, 50))]
+executor_type_list = ["pennylane"]    
+num_qubits_list = [1]
+num_layers_list = [1]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+experiment_QNN_test_with_RX = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned"], executor_type_list, quantum_bandwith])
+
+
+
 
 experiment_list_total = [experiment_first_combination, #0
                         experiment_better_combination, #1
@@ -184,5 +207,7 @@ experiment_list_total = [experiment_first_combination, #0
                         experiment_QNN_combination_paper_Chebyshev, #10
                         experiment_QNN_decay_combination_paper_Chebyshev, #11
                         experiment_QNN_decay_combination_paper_floating_Chebyshev, #12
+                        experiment_QNN_test,  #13
+                        experiment_QNN_test_with_RX #14
                         ] 
 

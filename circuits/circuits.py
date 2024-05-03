@@ -211,13 +211,35 @@ def ChebyshevTowerAndHEE(num_qubits, num_features, num_layers):
     circuit += HEE_rzrxrz(num_qubits, num_features, num_layers)
     return circuit
 
+def SimpleAnalyticalCircuit_qiskit(num_qubits, num_layers):
+    """
+    SimpleAnalyticalCircuit(num_qubits, num_layers)
+    Returns a circuit that is similar to the one used in IQP.
+    """
+    #Rx(x)Ry(p1)Ry(p2)
+    QC = QuantumCircuit(num_qubits)
+
+    features = ParameterVector(f"x", 1)
+    param_numbers = 2
+    parameters = ParameterVector(f"p", param_numbers)
+
+    QC.rx(features[0], 0)
+    for i in range(0, param_numbers):
+        QC.ry(parameters[i], 0)
+    
+    return QC
+
+def SimpleAnalyticalCircuit(num_features, num_qubits, num_layers):
+    return QiskitEncodingCircuit(SimpleAnalyticalCircuit_qiskit(num_qubits, num_layers))
+    
 
 circuits_dictionary = {
     "IQPLikeCircuit": IQPLikeCircuit,
     "Separable_rx": Separable_rx,
     "HardwareEfficientEmbeddingCircuit": HardwareEfficientEmbeddingCircuit,
     "Hamiltonian_time_evolution_encoding": Hamiltonian_time_evolution_encoding, 
-    "NoCircuit": "NoCircuit"
+    "NoCircuit": "NoCircuit",
+    "SimpleAnalyticalCircuit": SimpleAnalyticalCircuit
 }
 
 
@@ -233,5 +255,6 @@ circuits_dictionary_qiskit = {
     "MultiControlEncodingCircuit": MultiControlEncodingCircuit,
     "ChebyshevPQC": ChebyshevPQC, 
     "ChebyshevRx": ChebyshevRx,
-    "ChebyshevTowerAndHEE": ChebyshevTowerAndHEE
+    "ChebyshevTowerAndHEE": ChebyshevTowerAndHEE,
+    "SimpleAnalyticalCircuit": SimpleAnalyticalCircuit
 }

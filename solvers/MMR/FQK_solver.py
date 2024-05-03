@@ -132,14 +132,15 @@ class FQK_solver:
         print("output_dfdx", output_dfdx.shape)
         if len(f_initial) == 2:
             output_dfdxdx = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdxdx")["dfdxdx"] # (n*n, 
+            output_dfdxdx = output_dfdxdx.reshape((len(x_array), len(x_array), len(x_array[0])*2, len(x_array[0])*2))
+
         else:
-            output_dfdxdx = np.zeros_like(output_f)
+            output_dfdxdx = np.zeros((len(x_array), len(x_array), len(x_array[0])*2, len(x_array[0])*2))
 
 
         #reshape the output to the shape of the gram matrix
         output_f = output_f.reshape((len(x_array), len(x_array)))
         output_dfdx = output_dfdx.reshape((len(x_array), len(x_array), len(x_array[0])*2))
-        output_dfdxdx = output_dfdxdx.reshape((len(x_array), len(x_array), len(x_array[0])*2, len(x_array[0])*2))
 
 
         print("output_dfdx", output_dfdx.shape)
