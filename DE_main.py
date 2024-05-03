@@ -78,7 +78,7 @@ for idx, experiment in enumerate(experiment_list):
     elif experiment["method"].startswith("QNN"):
         method, boundary_handling = experiment["method"].split("_")
         loss_ODE = ODELoss(loss, grad_loss, initial_vec = f_initial, eta=1, boundary_handling = boundary_handling)
-        Optimizer = Adam(options={"maxiter": 450, "tol": 0.000009, "lr":0.01 })
+        Optimizer = Adam(options={"maxiter": 450, "tol": 0.000009, "lr":0.05 })
         EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
         #pop the encoding_circuit from the dict
         experiment["circuit_information"].pop("encoding_circuit")

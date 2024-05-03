@@ -220,11 +220,10 @@ def SimpleAnalyticalCircuit_qiskit(num_qubits, num_layers):
     QC = QuantumCircuit(num_qubits)
 
     features = ParameterVector(f"x", 1)
-    param_numbers = 2
-    parameters = ParameterVector(f"p", param_numbers)
+    parameters = ParameterVector(f"p", num_layers)
 
     QC.rx(features[0], 0)
-    for i in range(0, param_numbers):
+    for i in range(0, num_layers):
         QC.ry(parameters[i], 0)
     
     return QC

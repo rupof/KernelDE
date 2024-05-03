@@ -107,6 +107,7 @@ def grad_loss_paper_decay_QNN(loss_values, x_span = None):
 
     grad_F = (F(x, x_, x__)dx, F(x, x_, x__)dx_, F(x, x_, x__)dx__)
 
+    F = dfdx + lamb * f * (k + np.tan(lamb*x))
 
     grad_F = (-lamb*k, -1, 0)
     """
@@ -126,18 +127,6 @@ def grad_loss_paper_decay_QNN(loss_values, x_span = None):
     grad_envelope_list[2,:,:] =  0  # dF/dfdxdx
     return grad_envelope_list
 
-def loss_paper(f_alpha_tensor, x_span = None):
-    """
-    0 = -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f - df/dx
-    solution: f(x) = np.exp(-lamb * x * k) * np.cos(lamb * x), f(0) = 1
-    """
-    x, f, dfdx, dfdxdx = get_differentials(f_alpha_tensor, x_span)
-    lamb = 1
-    k = 1
-
-    return -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f - dfdx
-
-
 def derivatives_loss_paper(f_alpha_tensor, x_span = None):
         """
         0 = -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f - df/dx
@@ -154,6 +143,17 @@ def derivatives_loss_paper(f_alpha_tensor, x_span = None):
         k = 0.1
 
         return [-lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f]
+
+def loss_paper(f_alpha_tensor, x_span = None):
+    """
+    0 = -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f - df/dx
+    solution: f(x) = np.exp(-lamb * x * k) * np.cos(lamb * x), f(0) = 1
+    """
+    x, f, dfdx, dfdxdx = get_differentials(f_alpha_tensor, x_span)
+    lamb = 20
+    k = 0.1
+
+    return lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) + lamb * k * f + dfdx
 
 def grad_loss_paper(loss_values, x_span = None):
     """
@@ -177,8 +177,8 @@ def grad_loss_paper(loss_values, x_span = None):
     n_param = dfdp.shape[1]
 
     grad_envelope_list = np.zeros((3, x.shape[0], n_param)) # shape (3, n, p) 
-    grad_envelope_list[0,:,:] = -lamb*k # (dF/df,... p times) 
-    grad_envelope_list[1,:,:] = -1  # dF/dfdx
+    grad_envelope_list[0,:,:] =  lamb*k # (dF/df,... p times) 
+    grad_envelope_list[1,:,:] =  1  # dF/dfdx
     grad_envelope_list[2,:,:] =  0  # dF/dfdxdx
     return grad_envelope_list
 
