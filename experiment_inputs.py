@@ -204,6 +204,17 @@ gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
 QNN_log_test = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned"], executor_type_list, quantum_bandwith])
 
+encoding_circuit_list = ["ChebyshevTowerAndHEE_repeat"]
+function_list = [("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 20)), ("simple_test_QNN", [1], np.linspace(0, 0.9, 4)), ("harmonic_oscillator", [1, 0], np.linspace(0, 1*3.14, 20))]
+executor_type_list = ["pennylane"]    
+num_qubits_list = [2,6,8]
+num_layers_list = [5, 10]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+big_experiment = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned"], executor_type_list, quantum_bandwith])
+
+
 
 #QNN_floating
 experiment_list_total = [experiment_first_combination, #0
@@ -222,5 +233,6 @@ experiment_list_total = [experiment_first_combination, #0
                         experiment_QNN_test,  #13
                         experiment_QNN_test_with_RX, #14
                         QNN_log_test, #15
+                        big_experiment, #16
                         ] 
 

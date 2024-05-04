@@ -78,7 +78,7 @@ for idx, experiment in enumerate(experiment_list):
     elif experiment["method"].startswith("QNN"):
         method, boundary_handling = experiment["method"].split("_")
         loss_ODE = ODELoss(loss, grad_loss, initial_vec = f_initial, eta=1, boundary_handling = boundary_handling)
-        Optimizer = Adam(options={"maxiter": 450, "tol": 0.000009, "lr":0.05 })
+        Optimizer = Adam(options={"maxiter": 400, "tol": 0.00009,  "log_file": results_folder_path + f"/{idx}_T.log"})
         EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
         #pop the encoding_circuit from the dict
         experiment["circuit_information"].pop("encoding_circuit")
@@ -127,7 +127,10 @@ for idx, experiment in enumerate(experiment_list):
 
     dict_to_save = {"f_sol": f_sol, 
                     "optimal_alpha": optimal_alpha, 
-                    "mse": mse}
+                    "mse": mse, 
+                    "method": experiment["method"],
+                    "loss_name": experiment["loss_name"],
+                    "domain": experiment["x_domain"]}
     
     #include all keys and values from experiment["circuit_information"] to the dict_to_save
     for key, value in experiment["circuit_information"].items():
