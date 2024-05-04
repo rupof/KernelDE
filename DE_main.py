@@ -20,7 +20,7 @@ from scipy.integrate import odeint
 
 start = time.time()
 
-results_path = "./data/results/" #./data/results/ for local, /data/results/ for server
+results_path = "./data/results/" #./data/results/ for local, /datax/results/ for server
 index = str(sys.argv[1])
 index_experiment_list = int(sys.argv[2])
 num_cores = int(sys.argv[3])

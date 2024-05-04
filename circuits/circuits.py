@@ -1,5 +1,4 @@
 from squlearn.encoding_circuit import *
-from squlearn.encoding_circuit import HEE_rzrxrz
 
 import numpy as np
 #import reduce
@@ -211,6 +210,10 @@ def ChebyshevTowerAndHEE(num_qubits, num_features, num_layers):
     circuit += HEE_rzrxrz(num_qubits, num_features, num_layers)
     return circuit
 
+def ChebyshevTowerAndHEE_repeat(num_qubits, num_features, num_layers):
+    circuit = ChebyshevTower_with_HEE(num_qubits=num_qubits, num_features=1, num_chebyshev=num_qubits, num_layers=num_layers, hadamard_start=False, alpha=2)
+    return circuit
+
 def SimpleAnalyticalCircuit_qiskit(num_qubits, num_layers):
     """
     SimpleAnalyticalCircuit(num_qubits, num_layers)
@@ -255,5 +258,6 @@ circuits_dictionary_qiskit = {
     "ChebyshevPQC": ChebyshevPQC, 
     "ChebyshevRx": ChebyshevRx,
     "ChebyshevTowerAndHEE": ChebyshevTowerAndHEE,
-    "SimpleAnalyticalCircuit": SimpleAnalyticalCircuit
+    "SimpleAnalyticalCircuit": SimpleAnalyticalCircuit,
+    "ChebyshevTowerAndHEE_repeat": ChebyshevTowerAndHEE_repeat,
 }
