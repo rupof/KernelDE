@@ -88,7 +88,10 @@ for idx, experiment in enumerate(experiment_list):
         param_ini = encoding_circuit.generate_initial_parameters(seed=1)
         param_obs = Observables.generate_initial_parameters(seed=1)
          #np.ones(num_qubits+1)
-
+        if experiment["executor_type"] == "pennylane_shots_variance" or "qasm_simulator_variance":
+            variance_for_qnn_regularization = 10**-3
+        else:
+            variance_for_qnn_regularization = None
         clf = QNNRegressor(
             encoding_circuit,
             Observables,
@@ -97,7 +100,8 @@ for idx, experiment in enumerate(experiment_list):
             Optimizer,
             param_ini,
             param_obs,
-            opt_param_op = False
+            opt_param_op = False,
+            variance_for_qnn_regularization = variance_for_qnn_regularization
         )    
 
         y_ODE = np.zeros((x_span.shape[0]))
