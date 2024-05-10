@@ -45,6 +45,17 @@ def load_feather_folder_as_pd(folder_with_temp_files, short_load = False):
     print(time.time()-zero_time)
     return df.T
 
+def load_log_data(filename, short_load = False):
+    """
+    Load a log file as a pandas dataframe
+    """
+    #above line as a loop
+    
+        #open the log file and record the gradient and loss history
+    dict_loss = pd.read_csv(filename, delim_whitespace=True)
+    
+    return df.T
+
 def load_log_data(log_file_path):
     """
     Load a log file as a pandas dataframe

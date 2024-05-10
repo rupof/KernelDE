@@ -76,6 +76,25 @@ def Separable_rx_qiskit(num_qubits, num_layers, inverse = False, only_one_variab
 def Separable_rx(num_qubits, num_layers, inverse = False):  
     return QiskitEncodingCircuit(Separable_rx_qiskit(num_qubits, num_layers, inverse))
 
+def Separable_ry_qiskit(num_qubits, num_layers, inverse = False, only_one_variable = False):
+    QC = QuantumCircuit(num_qubits)
+
+    symbol = "y" if inverse else "x"
+    features = ParameterVector(f"{symbol}", num_qubits)
+    if only_one_variable:
+        features = [features[0]]*num_qubits
+    for layer in range(num_layers):
+        # Apply single-qubit rotations
+        for i in range(num_qubits):
+            QC.ry(np.arcsin(features[i]), i)
+    if inverse:
+        return QC.inverse()
+    else:
+        return QC
+    
+def Separable_ry(num_qubits, num_layers, inverse = False):  
+    return QiskitEncodingCircuit(Separable_ry_qiskit(num_qubits, num_layers, inverse))
+
 def HardwareEfficientEmbeddingCircuit_qiskit(num_qubits, num_layers, rotation_gate = "rx", inverse = False, only_one_variable = False):
     QC = QuantumCircuit(num_qubits)
 

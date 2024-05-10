@@ -101,13 +101,17 @@ class Solver:
         print(len(self.kernel_tensor))
         print("Initial loss: ", self.loss_function(alpha_0, L_functional, f_initial, x_span, self.kernel_tensor))
 
-        result = minimize(self.loss_function, alpha_0, args=(L_functional, f_initial, x_span, self.kernel_tensor),
-            options={'disp': True, 'maxiter': 10000})
+        functional_loss_by_iteration = []
+        prediction_by_iteration = []
 
+        def store_loss(x):
+            functional_loss_by_iteration.append(self.loss_function(x, L_functional, f_initial, x_span, self.kernel_tensor))
+            prediction_by_iteration.append(self.f_alpha_order(x, self.kernel_tensor, 0))
+        result = minimize(self.loss_function, alpha_0, args=(L_functional, f_initial, x_span, self.kernel_tensor),
+            options={'disp': False, 'maxiter': 10000}, callback=store_loss)
         optimal_alpha = result.x
         solution = self.f_alpha_order(optimal_alpha, self.kernel_tensor, 0)
-        _ = 0
-        return [solution, optimal_alpha], _
+        return [solution, optimal_alpha], [functional_loss_by_iteration, prediction_by_iteration]
 
     
 

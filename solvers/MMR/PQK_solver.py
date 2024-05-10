@@ -33,6 +33,7 @@ class PQK_solver:
 
         self.encoding_circuit, self.num_qubits = circuit_information["encoding_circuit"], circuit_information["num_qubits"]
         self.executor = executor
+        self.circuit_information_complete = circuit_information
         self.circuit_information = {key: value for key, value in circuit_information.items() if key not in {"encoding_circuit", "num_qubits"}}
         self.regularization_parameter = regularization_parameter
         self.envelope = envelope["function"]
@@ -40,7 +41,24 @@ class PQK_solver:
         self.analytical_derivative_2 = envelope["second_derivative_function"]
         self.envelope_parameters = {key: value for key, value in envelope.items() if key not in {"function", "derivative_function", "second_derivative_function"}}
     
-    
+    def get_plotting_relevant_info(self):
+        info =  self.circuit_information_complete
+        if "encoding_circuit" in info:
+            info["encoding_circuit"] = self.encoding_circuit.__name__
+        info["envelope"] = self.envelope.__name__
+        return {**info, **self.envelope_parameters}
+    def print_plotting_relevant_info(self):
+        info = self.get_plotting_relevant_info()
+        text = "PQK: "
+        for key, value in info.items():
+            if key == "encoding_circuit":
+                text += f"{value}, "
+            elif key == "envelope":
+                pass
+                #text += f"{value} "
+            else:
+                text += f"{key}: {value},"
+        return text
     def PQK_QNN(self):
         """
         Create the PQK QNN for the given encoding circuit and the executor.
@@ -62,7 +80,7 @@ class PQK_solver:
 
 
         PQK_Circuit = QiskitEncodingCircuit(EncodingCircuit(num_qubits = num_qubits, only_one_variable = True, **self.circuit_information))
-        observable = SummedPaulis(num_qubits, op_str="XYZ", include_identity=False, full_sum=False) #i.e Summed Paulis for a 2 qubit system: IX, XI, IY, YI, IZ, ZI
+        observable = SummedPaulis(num_qubits, op_str="XYZ", include_identity=True, full_sum=False) #i.e Summed Paulis for a 2 qubit system: IX, XI, IY, YI, IZ, ZI
         observable.get_pauli_mapped([1 for i in range(observable.num_parameters)]) #
         observable_coef = [1 for i in range(observable.num_parameters)]
         qnn_ = LowLevelQNN(PQK_Circuit, observable, self.executor)
@@ -118,7 +136,7 @@ class PQK_solver:
         return output_f_gramm_matrix, output_dfdx_gramm_matrix, output_dfdxdx_gramm_matrix[:,:]
     
 
-    def solver(self, x_span, f_initial, L_functional):
+    def solver(self, x_span, f_initial, L_functional, return_derivatives = False):
         """
         Solve the ODE using the PQK solver.
 
@@ -132,8 +150,8 @@ class PQK_solver:
         - sigma: The sigma parameter to be used in the RBF kernel.
 
         Returns:
-        - PQK_sol: The solution using the PQK solver.
-        - kernel_list: The kernel list.
+        - PQK_sol: The solution using the PQK solver (f, alpha).
+        - kernel_list: The kernel list used in the solver if return_derivatives is True.
         """
 
         ### PQK
@@ -145,7 +163,11 @@ class PQK_solver:
         kernel_list = np.array([K_f, K_dfdx, K_dfdxdx])
         Solver_ = Solver(kernel_list, self.regularization_parameter)
         solution_ = Solver_.solver(x_span, f_initial, L_functional = L_functional)
-        return solution_, kernel_list
+        if return_derivatives:
+            return solution_, kernel_list
+        else:
+            return solution_
+    
     
     def get_Kernel(self, x_span):
         """

@@ -84,8 +84,10 @@ sigma_list = np.linspace(0.1, 1, 70)
 mse_list = np.zeros_like(sigma_list)
 #for idx, sigma in enumerate(sigma_list):
 sigma = 1.5
+
+
 PQK_solver_test = PQK_solver({"encoding_circuit": Separable_rx_qiskit, 
-                            "num_qubits": 2, #8
+                            "num_qubits": 8,
                             "num_layers": 2,
                             },
                             Executor("pennylane"), 
@@ -110,8 +112,8 @@ FQK_solver_test = FQK_solver({"encoding_circuit": HardwareEfficientEmbeddingCirc
                               "num_layers": 2,
                               },
                               Executor("pennylane"),)
-solution_FQK, kernel_listFQK = FQK_solver_test.solver(x_line, f_initial, L_functional_1ODE)
-f_FQK, optimal_alpha_FQK = solution_FQK[0]
+#solution_FQK, kernel_listFQK = FQK_solver_test.solver(x_line, f_initial, L_functional_1ODE)
+#f_FQK, optimal_alpha_FQK = solution_FQK[0]
 
 
 
@@ -121,7 +123,7 @@ x_span_plot = x_line.reshape(-1, 1)
 plt.plot(x_span_plot, f_odeint, "-*",label="odeint")
 plt.plot(x_span_plot, f_RBF, "x", label="RBF")
 plt.plot(x_span_plot, f_PQK, label="PQK")
-plt.plot(x_span_plot, f_FQK, "-x",label="FQK")
+#plt.plot(x_span_plot, f_FQK, "-x",label="FQK")
 #plt.plot(x_span, np.log(x_span), label="log(x)")
 #plt.ylim(-3, 3)
 
