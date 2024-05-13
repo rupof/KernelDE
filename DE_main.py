@@ -12,6 +12,7 @@ from squlearn.qnn.loss import ODELoss
 from squlearn.optimizers import SLSQP, Adam
 from squlearn.qnn import QNNRegressor
 from squlearn.observables import *
+from DE_Library.diferential_equation_functionals import ODELoss_wrapper
 
 
 from utils.rbf_kernel_tools import analytical_derivative_rbf_kernel, analytical_derivative_rbf_kernel_2, rbf_kernel_manual
@@ -77,7 +78,7 @@ for idx, experiment in enumerate(experiment_list):
         dict_to_save = {"sigma": experiment["sigma"]}
     elif experiment["method"].startswith("QNN"):
         method, boundary_handling = experiment["method"].split("_")
-        loss_ODE = ODELoss(loss, grad_loss, initial_vec = f_initial, eta=1, boundary_handling = boundary_handling)
+        loss_ODE = ODELoss_wrapper(loss, grad_loss, initial_vec = f_initial, eta=1, boundary_handling = boundary_handling)
         Optimizer = Adam(options={"maxiter": 400, "tol": 0.00009,  "log_file": results_folder_path + f"/{idx}_T.log"})
         EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
         #pop the encoding_circuit from the dict

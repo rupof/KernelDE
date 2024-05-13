@@ -78,8 +78,10 @@ class PQK_solver:
         num_qubits = self.num_qubits
         executor = self.executor
 
-
-        PQK_Circuit = QiskitEncodingCircuit(EncodingCircuit(num_qubits = num_qubits, only_one_variable = True, **self.circuit_information))
+        try:
+            PQK_Circuit = QiskitEncodingCircuit(EncodingCircuit(num_qubits = num_qubits, only_one_variable = True, **self.circuit_information))
+        except:
+            PQK_Circuit = EncodingCircuit(num_qubits = num_qubits, **self.circuit_information)
         observable = SummedPaulis(num_qubits, op_str="XYZ", include_identity=True, full_sum=False) #i.e Summed Paulis for a 2 qubit system: IX, XI, IY, YI, IZ, ZI
         observable.get_pauli_mapped([1 for i in range(observable.num_parameters)]) #
         observable_coef = [1 for i in range(observable.num_parameters)]
@@ -124,7 +126,7 @@ class PQK_solver:
 
         if len(f_initial) == 2:
             output_dfdxdx_qnn_column = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdxdx")["dfdxdx"][:, 0]
-            output_dfdxdx_gramm_matrix = self.analytical_derivative_2(output_f_column, output_f_column, **kwargs) * output_dfdx_qnn_column + self.analytical_derivative(output_f_column, output_f_column, **kwargs) * output_dfdxdx_qnn_column #shape (n, n) #to be checked
+            output_dfdxdx_gramm_matrix = self.analytical_derivative_2(output_f_column, output_f_column, **kwargs) * output_dfdx_qnn_column + self.analytical_derivative(output_f_column, output_f_column, **kwargs) * output_dfdxdx_qnn_column 
         else:
             output_dfdxdx_gramm_matrix = np.zeros_like(output_f_gramm_matrix)
              

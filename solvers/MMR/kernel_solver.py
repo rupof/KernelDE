@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 
+from DE_Library.diferential_equation_functionals import get_differentials
 
 import numpy as np
 from scipy.optimize import minimize
@@ -85,6 +86,13 @@ class Solver:
 
         
         return L
+    
+    def create_kernel_L_functional(self, L_functional):
+        def kernel_L_functional(f_alpha_tensor, x_span):
+            f_tensor = get_differentials(f_alpha_tensor, x_span)
+            return L_functional(f_tensor)
+        return kernel_L_functional
+
 
     def solver(self, x_span, f_initial, L_functional):
         """Solves the differential equation using minimize from scipy.optimize.
@@ -92,6 +100,22 @@ class Solver:
         Args:
             x_span (np.ndarray): The span of the independent variable.
             kernel_tensor (tuple): A tuple containing kernel objects for f_alpha_0 and f_alpha_1.
+            f_initial (np.ndarray): The initial value of the dependent variable.
+            L_functional (function): The L functional, that describes the argument of the loss function. 
+                L_functional is assumed to be a function that an argument f_tensor, where x, f, dfdx, dfdxdx = f_tensor.
+
+                Example:
+
+                Simple Harmonic Oscillator:
+
+                def L_functional(f_tensor):
+                    x = f_tensor[0]
+                    f = f_tensor[1]
+                    dfdx = f_tensor[2]
+                    dfdxdx = f_tensor[3]
+                    return dfdxdx + f
+
+                
 
         Returns:
             tuple: A tuple containing the solution and optimal alpha.
@@ -99,19 +123,22 @@ class Solver:
 
         alpha_0 = np.ones(len(x_span) + 1)
         print(len(self.kernel_tensor))
-        print("Initial loss: ", self.loss_function(alpha_0, L_functional, f_initial, x_span, self.kernel_tensor))
+
+        _L_functional = self.create_kernel_L_functional(L_functional)
+
+
+        print("Initial loss: ", self.loss_function(alpha_0, _L_functional, f_initial, x_span, self.kernel_tensor))
 
         functional_loss_by_iteration = []
         prediction_by_iteration = []
 
         def store_loss(x):
-            functional_loss_by_iteration.append(self.loss_function(x, L_functional, f_initial, x_span, self.kernel_tensor))
+            functional_loss_by_iteration.append(self.loss_function(x, _L_functional, f_initial, x_span, self.kernel_tensor))
             prediction_by_iteration.append(self.f_alpha_order(x, self.kernel_tensor, 0))
-        result = minimize(self.loss_function, alpha_0, args=(L_functional, f_initial, x_span, self.kernel_tensor),
+        result = minimize(self.loss_function, alpha_0, args=(_L_functional, f_initial, x_span, self.kernel_tensor),
             options={'disp': False, 'maxiter': 10000}, callback=store_loss)
         optimal_alpha = result.x
         solution = self.f_alpha_order(optimal_alpha, self.kernel_tensor, 0)
         return [solution, optimal_alpha], [functional_loss_by_iteration, prediction_by_iteration]
 
     
-
