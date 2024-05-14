@@ -104,8 +104,7 @@ class PQK_solver:
         - output_f_gramm_matrix: The PQK kernel.
         - output_dfdx_gramm_matrix: The derivatives of the PQK kernel. 
         """
-
-
+        
         x_list_circuit_format = x_array
         output_f_column = qnn_.evaluate(x_list_circuit_format, [], coef, "f")["f"] # #shape (n,)    
         output_dfdx_qnn_column = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdx")["dfdx"] #shape (n, 1)
