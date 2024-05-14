@@ -58,6 +58,14 @@ for idx, experiment in enumerate(experiment_list):
     x_span *= quantum_bandwidth
 
 
+    solution_label = f"{experiment['loss_name']}_f_initial"
+    if solution_label in cache:
+        numerical_solution = cache[solution_label]
+    else:
+        print("Experiment ", experiment["loss_name"], " with f_initial")
+        numerical_solution = odeint(experiment["derivatives_of_loss"], f_initial, x_span[:])
+        cache[solution_label] = numerical_solution
+
     if experiment["method"] == "PQK":
         OSolver = PQK_solver(experiment["circuit_information"],
                                 experiment["executor_type"], 
@@ -120,13 +128,7 @@ for idx, experiment in enumerate(experiment_list):
         optimal_alpha = params
 
 
-    solution_label = f"{experiment['loss_name']}_f_initial"
-    if solution_label in cache:
-        numerical_solution = cache[solution_label]
-    else:
-        print("Experiment ", experiment["loss_name"], " with f_initial")
-        numerical_solution = odeint(experiment["derivatives_of_loss"], f_initial, x_span[:])
-        cache[solution_label] = numerical_solution
+    
     
     mse = np.mean((f_sol - cache[solution_label][:,0]))**2
 

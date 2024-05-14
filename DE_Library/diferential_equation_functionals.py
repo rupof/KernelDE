@@ -126,7 +126,7 @@ def derivatives_loss_paper_decay_QNN(f_alpha_tensor, x):
 
         return [-lamb * f * (k + np.tan(lamb*x))]
 
-def grad_loss_paper_decay_QNN(f_alpha_tensor, x_span = None):
+def grad_loss_paper_decay_QNN(f_alpha_tensor):
     """
     n = x_span.shape[0] number of points
     m = x_span.shape[1] number of dimensions (typically m=1)
@@ -207,7 +207,7 @@ def loss_log_ode(f_alpha_tensor):
     k = 1
     return dfdx - np.exp(-f*k)*lamb 
 
-def grad_loss_log_ode(loss_values, x_span = None):
+def grad_loss_log_ode(f_alpha_tensor):
     """
     n = x_span.shape[0] number of points
     m = x_span.shape[1] number of dimensions (typically m=1)
@@ -222,7 +222,7 @@ def grad_loss_log_ode(loss_values, x_span = None):
     """
     lamb = 1
     k = 1
-    x, f, dfdx, dfdxdx = get_differentials(loss_values)
+    x, f, dfdx, dfdxdx = f_alpha_tensor
 
     dFdf = -np.exp(-f*k)*lamb*k
     return [dFdf, 1, 0]
