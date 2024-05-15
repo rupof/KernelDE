@@ -10,9 +10,9 @@ executor_type_dictionary = {
     "statevector_simulator": Executor("statevector_simulator"),
     "pennylane": Executor("pennylane"), 
     "qasm_simulator_variance": Executor("qasm_simulator", shots=5000, seed=1),
-    "pennylane_shots_variance": Executor("default.qubit", shots=7000, seed = 1),
+    "pennylane_shots_variance": Executor("default.qubit", shots=10000, seed = 1),
     "qasm_simulator": Executor("qasm_simulator", shots=5000, seed=1),
-    "pennylane_shots": Executor("default.qubit", shots=7000, seed = 1),
+    "pennylane_shots": Executor("default.qubit", shots=10000, seed = 1),
 }
 
 def get_experiment_combination_list(experimental_parameters):
@@ -178,7 +178,7 @@ experiment_QNN_decay_combination_paper_floating_Chebyshev = get_experiment_combi
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
 function_list = [("paper_decay_QNN", [1], np.linspace(0, 0.9, 20))]
 executor_type_list = ["pennylane"]    
-num_qubits_list = [8]
+num_qubits_list = [7]
 num_layers_list = [5]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
@@ -232,8 +232,8 @@ experiment_QNN_combination_ho_shots = get_experiment_combination_list([function_
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
 function_list = [("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 20))]
-executor_type_list = ["pennylane_shots_variance", "pennylane_shots"]    
-num_qubits_list = [4]
+executor_type_list = ["pennylane_shots_variance", "pennylane_shots", "pennylane"]    
+num_qubits_list = [5]
 num_layers_list = [3]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
