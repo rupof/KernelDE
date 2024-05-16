@@ -244,6 +244,16 @@ gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
 log_experiment_chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_floating"], executor_type_list, quantum_bandwith])
 
+encoding_circuit_list = ["ChebyshevTowerAndHEE"]
+function_list = [("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 12))]
+executor_type_list = ["qasm_simulator_variance", "qasm_simulator", "pennylane"]    
+num_qubits_list = [6]
+num_layers_list = [3]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+log_experiment_shots_and_variance_qiskit = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned"], executor_type_list, quantum_bandwith])
+
 
 #QNN_floating
 experiment_list_total = [experiment_first_combination, #0
@@ -266,5 +276,6 @@ experiment_list_total = [experiment_first_combination, #0
                         experiment_QNN_combination_ho_shots, #17
                         log_experiment_shots_and_variance, #18
                         log_experiment_chebyshev, #19
+                        log_experiment_shots_and_variance_qiskit, #20
                         ] 
 

@@ -68,9 +68,9 @@ from squlearn import Executor
 executor_type_dictionary = {
     "statevector_simulator": Executor("statevector_simulator"),
     "pennylane": Executor("pennylane"), 
-    "qasm_simulator_variance": Executor("qasm_simulator", shots=50000, seed=1),
+    "qasm_simulator_variance": Executor("qasm_simulator", shots=5000, seed=1),
     "pennylane_shots_variance": Executor("default.qubit", shots=50000, seed = 1),
-    "qasm_simulator": Executor("qasm_simulator", shots=50000, seed=1),
+    "qasm_simulator": Executor("qasm_simulator", shots=5000, seed=1),
     "pennylane_shots": Executor("default.qubit", shots=50000, seed = 1),
 }
 
