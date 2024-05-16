@@ -64,6 +64,15 @@ def ODELoss_wrapper(ODE_functional, ODE_functional_gradient, initial_vec, eta = 
     return ODELoss(create_QNN_loss(ODE_functional), create_QNN_gradient(ODE_functional_gradient), initial_vec, eta, boundary_handling)
     
 
+from squlearn import Executor
+executor_type_dictionary = {
+    "statevector_simulator": Executor("statevector_simulator"),
+    "pennylane": Executor("pennylane"), 
+    "qasm_simulator_variance": Executor("qasm_simulator", shots=50000, seed=1),
+    "pennylane_shots_variance": Executor("default.qubit", shots=50000, seed = 1),
+    "qasm_simulator": Executor("qasm_simulator", shots=50000, seed=1),
+    "pennylane_shots": Executor("default.qubit", shots=50000, seed = 1),
+}
 
 def loss_simple_test_QNN(f_alpha_tensor):
     """
@@ -74,13 +83,12 @@ def loss_simple_test_QNN(f_alpha_tensor):
     x, f, dfdx, dfdxdx = f_alpha_tensor
     return dfdx + np.sin(x)
 
-def derivatives_loss_simple_test_QNN(f_alpha_tensor):
+def derivatives_loss_simple_test_QNN(f_alpha_tensor, x_span):
     """
-    df/dx + f = 0
+    df/dx + sin(x) = 0
     f(0) = 1
     """
-    x, f, dfdx, dfdxdx = f_alpha_tensor
-    return [-np.sin(x)]
+    return [-np.sin(x_span)]
 
 def grad_loss_simple_test_QNN(f_array):
     """

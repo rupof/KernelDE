@@ -12,11 +12,13 @@ from squlearn.qnn.loss import ODELoss
 from squlearn.optimizers import SLSQP, Adam
 from squlearn.qnn import QNNRegressor
 from squlearn.observables import *
-from DE_Library.diferential_equation_functionals import ODELoss_wrapper
+from DE_Library.diferential_equation_functionals import ODELoss_wrapper, executor_type_dictionary
 
 
 from utils.rbf_kernel_tools import analytical_derivative_rbf_kernel, analytical_derivative_rbf_kernel_2, rbf_kernel_manual
 from scipy.integrate import odeint
+
+
 
 
 start = time.time()
@@ -56,7 +58,9 @@ for idx, experiment in enumerate(experiment_list):
     f_initial = experiment["f_initial"]
     quantum_bandwidth = experiment["quantum_bandwidth"]
     x_span *= quantum_bandwidth
-
+    executor_str = experiment["executor_type"]
+    print(executor_str)
+    executor_object = executor_type_dictionary[executor_str]
 
     solution_label = f"{experiment['loss_name']}_f_initial"
     if solution_label in cache:
@@ -68,7 +72,7 @@ for idx, experiment in enumerate(experiment_list):
 
     if experiment["method"] == "PQK":
         OSolver = PQK_solver(experiment["circuit_information"],
-                                experiment["executor_type"], 
+                                executor_object, 
                                 envelope={"function": rbf_kernel_manual, 
                                             "derivative_function": analytical_derivative_rbf_kernel, 
                                             "second_derivative_function": analytical_derivative_rbf_kernel_2,
@@ -77,7 +81,7 @@ for idx, experiment in enumerate(experiment_list):
 
     elif experiment["method"] == "FQK":
         OSolver = FQK_solver(experiment["circuit_information"],
-                                experiment["executor_type"])
+                                executor_object)
     elif experiment["method"] == "classical_RBF":
         RBF_kernel_list = [rbf_kernel_manual(x_span, x_span, sigma = experiment["sigma"]), 
                            analytical_derivative_rbf_kernel(x_span, x_span, sigma = experiment["sigma"]),
@@ -87,7 +91,7 @@ for idx, experiment in enumerate(experiment_list):
     elif experiment["method"].startswith("QNN"):
         method, boundary_handling = experiment["method"].split("_")
         loss_ODE = ODELoss_wrapper(loss, grad_loss, initial_vec = f_initial, eta=1, boundary_handling = boundary_handling)
-        Optimizer = Adam(options={"maxiter": 400, "tol": 0.00009,  "log_file": results_folder_path + f"/{idx}_T.log"})
+        Optimizer = Adam(options={"maxiter": 600, "tol": 0.001,  "log_file": results_folder_path + f"/{idx}_T.log"})
         EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
         #pop the encoding_circuit from the dict
         experiment["circuit_information"].pop("encoding_circuit")
@@ -97,14 +101,15 @@ for idx, experiment in enumerate(experiment_list):
         param_ini = encoding_circuit.generate_initial_parameters(seed=1)
         param_obs = Observables.generate_initial_parameters(seed=1)
          #np.ones(num_qubits+1)
-        if experiment["executor_type"] == "pennylane_shots_variance" or "qasm_simulator_variance":
+        if executor_str == "pennylane_shots_variance" or "qasm_simulator_variance":
+            print("using variance")
             variance_for_qnn_regularization = 10**-3
         else:
             variance_for_qnn_regularization = None
         clf = QNNRegressor(
             encoding_circuit,
             Observables,
-            experiment["executor_type"],
+            executor_object,
             loss_ODE,
             Optimizer,
             param_ini,
@@ -137,7 +142,9 @@ for idx, experiment in enumerate(experiment_list):
                     "mse": mse, 
                     "method": experiment["method"],
                     "loss_name": experiment["loss_name"],
-                    "domain": experiment["x_domain"]}
+                    "domain": experiment["x_domain"], 
+                    "executor_type": executor_str,
+    }
     
     #include all keys and values from experiment["circuit_information"] to the dict_to_save
     for key, value in experiment["circuit_information"].items():
