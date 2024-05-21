@@ -29,16 +29,21 @@ def load_feather_folder_as_pd(folder_with_temp_files, short_load = False):
     zero_time = time.time()
     if short_load:
         temp_files = temp_files[:200]
+    print(temp_files)
     for idx, temp_file in enumerate(temp_files):    
         dict_idx = pd.read_feather(temp_file)
-        
         #only grab experiment of row idx
-        dict_idx = dict_idx.iloc[idx]
+        dict_idx = dict_idx.iloc[0]
         #open the log file and record the gradient and loss history
-        dict_loss = pd.read_csv(temp_file[:-8]+".log", delim_whitespace=True)
 
-        dict_idx["loss_history"] = np.array(dict_loss["f(x)"])
-        dict_idx["gradient_history"] = np.array(dict_loss["Gradient"])
+        try:
+            dict_loss = pd.read_csv(temp_file[:-8]+".log", delim_whitespace=True)
+            dict_idx["loss_history"] = np.array(dict_loss["f(x)"])
+            dict_idx["mse_history"] = np.array(dict_loss["MSE"])
+            dict_idx["gradient_history"] = np.array(dict_loss["Gradient"])
+        except:
+            pass
+
         dicts.append(dict_idx)
         times.append(time.time()-zero_time)
     df = pd.concat(dicts, axis=1, sort=False, ignore_index=True)

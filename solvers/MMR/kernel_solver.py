@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 
-from DE_Library.diferential_equation_functionals import get_differentials
+from DE_Library.qnn_and_kernels_wrappers import get_differentials
 
 import numpy as np
 from scipy.optimize import minimize
