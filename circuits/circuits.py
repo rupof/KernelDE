@@ -229,6 +229,11 @@ def ChebyshevTowerAndHEE(num_qubits, num_features, num_layers):
     circuit += HEE_rzrxrz(num_qubits, num_features, num_layers)
     return circuit
 
+def ChebyshevTowerAndHEE_rx(num_qubits, num_features, num_layers):
+    circuit =  ChebyshevTower(num_qubits=num_qubits, num_features=num_features, num_chebyshev=num_qubits, alpha = 2, hadamard_start=False, rotation_gate = "rx")
+    circuit += HEE_rzrxrz(num_qubits, num_features, num_layers)
+    return circuit
+
 def ChebyshevTowerAndHEE_repeat(num_qubits, num_features, num_layers):
     circuit = ChebyshevTower_with_HEE(num_qubits=num_qubits, num_features=1, num_chebyshev=num_qubits, num_layers=num_layers, hadamard_start=False, alpha=2)
     return circuit
@@ -280,4 +285,5 @@ circuits_dictionary_qiskit = {
     "ChebyshevTowerAndHEE": ChebyshevTowerAndHEE,
     "SimpleAnalyticalCircuit": SimpleAnalyticalCircuit,
     "ChebyshevTowerAndHEE_repeat": ChebyshevTowerAndHEE_repeat,
+    "ChebyshevTowerAndHEE_rx": ChebyshevTowerAndHEE_rx
 }

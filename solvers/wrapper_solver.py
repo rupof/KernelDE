@@ -72,9 +72,9 @@ def wrapper_experiment_solver(experiment):
         OSolver = Solver(RBF_kernel_list)
         dict_to_save = {"sigma": experiment["sigma"]}
     elif experiment["method"].startswith("QNN"):
-        method, boundary_handling = experiment["method"].split("_")
+        method, boundary_handling, maxiter = experiment["method"].split("_")
         loss_ODE = ODELoss_wrapper(loss, grad_loss, initial_vec = f_initial, eta=1, boundary_handling = boundary_handling)
-        Optimizer = Adam(options={"maxiter": 300, "tol": 10**-3,  "log_file": experiment["path"] + f".log"})
+        Optimizer = Adam(options={"maxiter": int(maxiter), "tol": 10**-3,  "log_file": experiment["path"] + f".log"})
         EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
         #pop the encoding_circuit from the dict
         experiment["circuit_information"].pop("encoding_circuit")

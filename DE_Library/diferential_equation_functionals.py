@@ -130,7 +130,7 @@ def grad_loss_paper(f_alpha_tensor):
 
 def loss_log_ode(f_alpha_tensor):
     """
-    0 = lamb * np.exp(f * k) - df/dx
+    0 = -lamb * np.exp(f * k) + df/dx
     f(0.001) = np.log(0.001)
 
     solution: f(x) = np.log(x)
@@ -150,9 +150,9 @@ def grad_loss_log_ode(f_alpha_tensor):
 
     grad_F = (F(x, x_, x__)dx, F(x, x_, x__)dx_, F(x, x_, x__)dx__)
 
-    F = lamb * np.exp(f * k) - df/dx
+    F = -lamb * np.exp(-f * k) + df/dx
 
-    grad_F = (-lamb*k, -1, 0)
+    grad_F = (lamb*k*np.exp(-f * k), 1, 0)
     """
     lamb = 1
     k = 1
