@@ -227,13 +227,55 @@ def derivatives_loss_harmonic_oscillator(f_alpha_tensor, x_span):
     dfdx = f_alpha_tensor[1]
     return [dfdx, -f]
 
+
+# Damped Harmonic Oscillator
+
+
+def loss_damped_harmonic_oscillator(f_alpha_tensor):
+    """
+    L_functional = m*dfdxdx + c*dfdx + k*f
+    """
+    x, f, dfdx, dfdxdx = f_alpha_tensor
+    k = 21**2
+    c = 4
+    return k*f + c*dfdx + dfdxdx
+
+def grad_loss_damped_harmonic_oscillator(f_alpha_tensor):
+    """
+    n = x_span.shape[0] number of points
+    m = x_span.shape[1] number of dimensions (typically m=1)
+
+    F[x, x_, x__] = F(x, x_, x__)
+
+    grad_F = (F(x, x_, x__)dx, F(x, x_, x__)dx_, F(x, x_, x__)dx__)
+
+    grad_F = (k, c, 0)
+    """
+    k = 21**2
+    c = 4
+    x, f, dfdx, dfdxdx = f_alpha_tensor
+    return [k, c, 0]
+
+def derivatives_loss_damped_harmonic_oscillator(f_alpha_tensor, x_span):
+    """
+    L_functional = m*dfdxdx + c*dfdx + k*f
+    """
+    f = f_alpha_tensor[0]
+    dfdx = f_alpha_tensor[1]
+    k = 21**2
+    c = 4
+
+    return [dfdx, -c*dfdx - k*f]
+
+
 mapping_of_loss_functions = {
     "paper": loss_paper,
     "log_ode": loss_log_ode,
     "polynomial_with_exp": loss_polynomial_with_exp,
     "harmonic_oscillator": loss_harmonic_oscillator,
     "paper_decay_QNN": loss_paper_decay_QNN, 
-    "simple_test_QNN": loss_simple_test_QNN
+    "simple_test_QNN": loss_simple_test_QNN, 
+    "damped_harmonic_oscillator": loss_damped_harmonic_oscillator
 }
 
 mapping_of_derivatives_of_loss_functions = {
@@ -242,7 +284,8 @@ mapping_of_derivatives_of_loss_functions = {
     "polynomial_with_exp": derivatives_loss_polynomial_with_exp,
     "harmonic_oscillator": derivatives_loss_harmonic_oscillator,
     "paper_decay_QNN": derivatives_loss_paper_decay_QNN,
-    "simple_test_QNN": derivatives_loss_simple_test_QNN
+    "simple_test_QNN": derivatives_loss_simple_test_QNN, 
+    "damped_harmonic_oscillator": derivatives_loss_damped_harmonic_oscillator
 }
 
 mapping_of_grad_of_loss_functions = {
@@ -251,5 +294,6 @@ mapping_of_grad_of_loss_functions = {
     "polynomial_with_exp": derivatives_loss_polynomial_with_exp,
     "harmonic_oscillator": grad_loss_harmonic_oscillator,
     "paper_decay_QNN": grad_loss_paper_decay_QNN, 
-    "simple_test_QNN": grad_loss_simple_test_QNN
+    "simple_test_QNN": grad_loss_simple_test_QNN, 
+    "damped_harmonic_oscillator": grad_loss_damped_harmonic_oscillator
 }
