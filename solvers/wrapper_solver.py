@@ -84,8 +84,8 @@ def wrapper_experiment_solver(experiment):
         param_ini = encoding_circuit.generate_initial_parameters(seed=1)
         param_obs = Observables.generate_initial_parameters(seed=1)
         #np.ones(num_qubits+1)
-        if executor_str == "pennylane_shots_variance" or "qasm_simulator_variance":
-            print("using variance")
+        if executor_str == "pennylane_shots_variance" or executor_str == "qasm_simulator_variance":
+            print(f"using variance with {executor_str}")
             variance_for_qnn_regularization = 10**-3
         else:
             variance_for_qnn_regularization = None
