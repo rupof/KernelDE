@@ -41,7 +41,7 @@ def loss_paper_decay_QNN(f_alpha_tensor):
     solution: f(x) = np.exp(-lamb * x * k) * np.cos(lamb * x) + cte, f(0) = 1
     """
     x, f, dfdx, dfdxdx = f_alpha_tensor
-    lamb = 8
+    lamb = 20#8
     k = 0.1
 
     return dfdx + lamb * f * (k + np.tan(lamb*x))
@@ -55,7 +55,7 @@ def derivatives_loss_paper_decay_QNN(f_alpha_tensor, x):
         
         f = f_alpha_tensor[0]
 
-        lamb = 8
+        lamb = 20#8
         k = 0.1
 
         return [-lamb * f * (k + np.tan(lamb*x))]
@@ -73,11 +73,14 @@ def grad_loss_paper_decay_QNN(f_alpha_tensor):
 
     grad_F = (-lamb*k, -1, 0)
     """
-    lamb = 8
+    lamb = 20#8
     k = 0.1
     x, f, dfdx, dfdxdx = f_alpha_tensor
 
     dFdf = lamb * (k + np.tan(lamb*x))
+    dFdfdx = 1
+    dFdfdxdx = 0
+
 
     return [dFdf, 1, 0]
 
