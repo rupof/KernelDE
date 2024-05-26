@@ -10,7 +10,7 @@ from solvers.MMR.PQK_solver import PQK_solver
 from solvers.MMR.FQK_solver import FQK_solver
 from solvers.MMR.kernel_solver import Solver
 from squlearn.qnn.loss import ODELoss
-from squlearn.optimizers import SLSQP, Adam
+from squlearn.optimizers import SLSQP, Adam #SGLBO
 from squlearn.qnn import QNNRegressor
 from squlearn.observables import *
 from DE_Library.qnn_and_kernels_wrappers import ODELoss_wrapper, executor_type_dictionary
@@ -74,7 +74,8 @@ def wrapper_experiment_solver(experiment):
     elif experiment["method"].startswith("QNN"):
         method, boundary_handling, maxiter = experiment["method"].split("_")
         loss_ODE = ODELoss_wrapper(loss, grad_loss, initial_vec = f_initial, eta=1, boundary_handling = boundary_handling)
-        Optimizer = Adam(options={"maxiter": int(maxiter), "tol": 10**-4,  "log_file": experiment["path"] + f".log"})
+        Optimizer = Adam(options={"maxiter": int(maxiter), "tol": 10**-4,  "log_file": experiment["path"] + f".log", "lr" : 0.02, "num_average":2 })
+        #Optimizer = SGLBO(options={"maxiter": int(maxiter), "tol": 10**-4,  "log_file": experiment["path"] + f".log"})
         EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
         #pop the encoding_circuit from the dict
         experiment["circuit_information"].pop("encoding_circuit")
