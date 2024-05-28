@@ -13,7 +13,7 @@ from qiskit.circuit import ParameterVector
 
 
 
-def IQPLikeCircuit_qiskit(num_qubits, num_layers, inverse = False):
+def IQPLikeCircuit_qiskit(num_qubits, num_layers):
     """
     IQPLikeCircuit(num_qubits, num_layers)
     Returns a circuit that is similar to the one used in IQP.
@@ -34,17 +34,15 @@ def IQPLikeCircuit_qiskit(num_qubits, num_layers, inverse = False):
         #product of all elements in x
         return reduce(lambda a, b: a * b, x)
     
-    if inverse:
-        return ZZFeatureMap(num_qubits, reps = num_layers, data_map_func = self_product).inverse()
-    else:
-        return ZZFeatureMap(num_qubits, reps = num_layers, data_map_func = self_product)
+    
+    return ZZFeatureMap(num_qubits, reps = num_layers, data_map_func = self_product)
 
-def IQPLikeCircuit(num_qubits, num_layers, inverse = False):
+def IQPLikeCircuit(num_qubits, num_layers):
     """
     IQPLikeCircuit(num_qubits, num_layers)
     Returns a circuit that is similar to the one used in IQP.
     """
-    return QiskitEncodingCircuit(IQPLikeCircuit_qiskit(num_qubits, num_layers, inverse))
+    return QiskitEncodingCircuit(IQPLikeCircuit_qiskit(num_qubits, num_layers))
 
 #def Separable_rx(num_qubits, num_layers):
 #    """
@@ -57,45 +55,41 @@ def IQPLikeCircuit(num_qubits, num_layers, inverse = False):
 #    return fmap
 #"""
 
-def Separable_rx_qiskit(num_qubits, num_layers, inverse = False, only_one_variable = False):
+def Separable_rx_qiskit(num_qubits, num_layers, num_features = 1):
     QC = QuantumCircuit(num_qubits)
 
-    symbol = "y" if inverse else "x"
+    symbol = "x"
     features = ParameterVector(f"{symbol}", num_qubits)
-    if only_one_variable:
+    if num_features == 1:
         features = [features[0]]*num_qubits
     for layer in range(num_layers):
         # Apply single-qubit rotations
         for i in range(num_qubits):
             QC.rx(features[i], i)
-    if inverse:
-        return QC.inverse()
-    else:
-        return QC
     
-def Separable_rx(num_qubits, num_layers, inverse = False):  
-    return QiskitEncodingCircuit(Separable_rx_qiskit(num_qubits, num_layers, inverse))
+    return QC
+    
+def Separable_rx(num_qubits, num_layers, num_features = 1):  
+    return QiskitEncodingCircuit(Separable_rx_qiskit(num_qubits, num_layers, num_features))
 
-def Separable_ry_qiskit(num_qubits, num_layers, inverse = False, only_one_variable = False):
+def Separable_ry_qiskit(num_qubits, num_layers, num_features = 1):
     QC = QuantumCircuit(num_qubits)
 
-    symbol = "y" if inverse else "x"
+    symbol = "x"
     features = ParameterVector(f"{symbol}", num_qubits)
-    if only_one_variable:
+    if num_features == 1:
         features = [features[0]]*num_qubits
     for layer in range(num_layers):
         # Apply single-qubit rotations
         for i in range(num_qubits):
             QC.ry(np.arcsin(features[i]), i)
-    if inverse:
-        return QC.inverse()
-    else:
-        return QC
-    
-def Separable_ry(num_qubits, num_layers, inverse = False):  
-    return QiskitEncodingCircuit(Separable_ry_qiskit(num_qubits, num_layers, inverse))
+   
+    return QC
 
-def HardwareEfficientEmbeddingCircuit_qiskit(num_qubits, num_layers, rotation_gate = "rx", inverse = False, only_one_variable = False):
+def Separable_ry(num_qubits, num_layers, num_features = 1):  
+    return QiskitEncodingCircuit(Separable_ry_qiskit(num_qubits, num_layers, num_features=1))
+
+def HardwareEfficientEmbeddingCircuit_qiskit(num_qubits, num_layers, rotation_gate = "rx", num_features = 1):
     QC = QuantumCircuit(num_qubits)
 
     def h_rz_gate(theta, qubit):
@@ -117,9 +111,9 @@ def HardwareEfficientEmbeddingCircuit_qiskit(num_qubits, num_layers, rotation_ga
     if rotation_func is None:
         raise ValueError("Invalid rotation_gate value. Choose 'rx', 'ry', 'rz', or 'h_rz'.")
         
-    symbol = "y" if inverse else "x"
+    symbol = "x"
     features = ParameterVector(f"{symbol}", num_qubits)
-    if only_one_variable:
+    if num_features == 1:
         features = [features[0]]*num_qubits
     for layer in range(num_layers):
         # Apply single-qubit rotations
@@ -128,17 +122,15 @@ def HardwareEfficientEmbeddingCircuit_qiskit(num_qubits, num_layers, rotation_ga
         # Apply entangling gates
         for i in range(num_qubits - 1):
             QC.cx(i, i+1)
-    if inverse:
-        return QC.inverse()
-    else:
-        return QC
     
-def HardwareEfficientEmbeddingCircuit(num_qubits, num_layers, rotation_gate, inverse = False):
-    return QiskitEncodingCircuit(HardwareEfficientEmbeddingCircuit_qiskit(num_qubits, num_layers, rotation_gate, inverse))
+    return QC
+
+def HardwareEfficientEmbeddingCircuit(num_qubits, num_layers, num_features = 1, rotation_gate = "rx"):
+    return QiskitEncodingCircuit(HardwareEfficientEmbeddingCircuit_qiskit(num_qubits, num_layers, rotation_gate, num_features))
 #fmap = HardwareEfficientEmbeddingCircuit(num_qubits=num_qubits, num_layers=num_layers)
 
 
-def Hamiltonian_time_evolution_encoding_qiskit(num_qubits, trotter_time_T, evolve_time_t, inverse = False, only_one_variable = False):
+def Hamiltonian_time_evolution_encoding_qiskit(num_qubits, trotter_time_T, evolve_time_t, num_features = 1):
     """
     Implements the Trotter formula, to time evolve a 1D Heisenberg chain Hamiltonian.
 
@@ -163,9 +155,9 @@ def Hamiltonian_time_evolution_encoding_qiskit(num_qubits, trotter_time_T, evolv
 
     n_components = num_qubits - 1
 
-    symbol = "y" if inverse else "x"
+    symbol = "x"
     features = ParameterVector(f"{symbol}", n_components)
-    if only_one_variable:
+    if num_features == 1:
         features = [features[0]]*n_components
 
     def H_j(j, n_qubits):
@@ -192,11 +184,11 @@ def Hamiltonian_time_evolution_encoding_qiskit(num_qubits, trotter_time_T, evolv
 
 
     initial_state = [1/np.sqrt(2), -1/np.sqrt(2)]
-    if inverse:
-        for _ in range(trotter_time_T):
-            for evo in evolve_block:
-                circuit.append(evo, range(num_qubits))
-        return circuit.inverse()
+    #if inverse:
+    #    for _ in range(trotter_time_T):
+    #        for evo in evolve_block:
+    #            circuit.append(evo, range(num_qubits))
+    #    return circuit.inverse()
 
     random_haar_states = [random_statevector(2, seed = seed) for seed in range(num_qubits)]
     for i in range(num_qubits):
@@ -209,19 +201,47 @@ def Hamiltonian_time_evolution_encoding_qiskit(num_qubits, trotter_time_T, evolv
 
    
     
-def Hamiltonian_time_evolution_encoding(n_components, trotter_time_T, evolve_time_t, inverse = False):
-    return QiskitEncodingCircuit(Hamiltonian_time_evolution_encoding_qiskit(n_components, trotter_time_T, evolve_time_t, inverse))
+def Hamiltonian_time_evolution_encoding(n_components, trotter_time_T, evolve_time_t):
+    return QiskitEncodingCircuit(Hamiltonian_time_evolution_encoding_qiskit(n_components, trotter_time_T, evolve_time_t))
 
 
 
-def FQK_kernel_circuit(encoding_circuit, num_qubits, **kwargs):
-    U = encoding_circuit(inverse = False, num_qubits = num_qubits, **kwargs)
-    U_inv = encoding_circuit(inverse = True, num_qubits = num_qubits, **kwargs)
+def FQK_kernel_circuit(encoding_circuit):
+    """
+    Given a squlearn encoding circuit, returns the corresponding FQK kernel circuit.
 
-    circuit = QuantumCircuit(num_qubits)
+
+    """
+    features = ParameterVector("x", encoding_circuit.num_features)
+    features_inv = ParameterVector("y", encoding_circuit.num_features)
+
+    parameters = ParameterVector("p", encoding_circuit.num_parameters)
+
+    U = encoding_circuit.get_circuit(features, parameters)
+    U_inv = encoding_circuit.get_circuit(features_inv, parameters).inverse()
+        
+    circuit = QuantumCircuit(encoding_circuit.num_qubits)
     circuit.compose(U, inplace = True)
     circuit.compose(U_inv, inplace = True)
     return circuit
+
+def PQK_kernel_wrapper(encoding_circuit):
+    """
+    squlearn has a bug for parameterized circuits. This function is a workaround for that bug.
+
+    the bug: qc =QiskitEncodingCircuit(HEEAndChebyshevTower(num_qubits=4, num_features=1, num_layers=1), feature_label=["x"], parameter_label=["p"])
+    returns an error
+
+    """
+    features = ParameterVector("x", encoding_circuit.num_features)
+    parameters = ParameterVector("p", encoding_circuit.num_parameters)
+
+    U = encoding_circuit.get_circuit(features, parameters)
+
+    circuit = QuantumCircuit(encoding_circuit.num_qubits)
+    circuit.compose(U, inplace = True)
+    return circuit
+
 
 
 def ChebyshevTowerAndHEE(num_qubits, num_features, num_layers):
@@ -229,6 +249,15 @@ def ChebyshevTowerAndHEE(num_qubits, num_features, num_layers):
     circuit += HEE_rzrxrz(num_qubits, num_features, num_layers)
     return circuit
 
+
+def HEEAndChebyshevTower(num_qubits, num_features, num_layers):
+    circuit = HEE_rzrxrz(num_qubits, num_features, 1)
+    circuit +=  ChebyshevTower(num_qubits=num_qubits, num_features=num_features, num_chebyshev=num_qubits, alpha = 2, hadamard_start=False)
+
+    for i in range(num_layers - 1):
+        circuit += HEE_rzrxrz(num_qubits, num_features, 1)
+        circuit +=  ChebyshevTower(num_qubits=num_qubits, num_features=num_features, num_chebyshev=num_qubits, alpha = 2, hadamard_start=False)
+    return circuit
 def ChebyshevTowerAndHEE_rx(num_qubits, num_features, num_layers):
     circuit =  ChebyshevTower(num_qubits=num_qubits, num_features=num_features, num_chebyshev=num_qubits, alpha = 2, hadamard_start=False, rotation_gate = "rx")
     circuit += HEE_rzrxrz(num_qubits, num_features, num_layers)
@@ -266,15 +295,16 @@ circuits_dictionary = {
     "HardwareEfficientEmbeddingCircuit": HardwareEfficientEmbeddingCircuit,
     "Hamiltonian_time_evolution_encoding": Hamiltonian_time_evolution_encoding, 
     "NoCircuit": "NoCircuit",
-    "SimpleAnalyticalCircuit": SimpleAnalyticalCircuit
+    "SimpleAnalyticalCircuit": SimpleAnalyticalCircuit,
+    "HEEAndChebyshevTower": HEEAndChebyshevTower,
 }
 
 
 circuits_dictionary_qiskit = {
-    "IQPLikeCircuit": IQPLikeCircuit_qiskit,
-    "Separable_rx": Separable_rx_qiskit,
+    "IQPLikeCircuit": IQPLikeCircuit,
+    "Separable_rx": Separable_rx,
     "Separable_rx_qiskit": Separable_rx_qiskit,
-    "HardwareEfficientEmbeddingCircuit": HardwareEfficientEmbeddingCircuit_qiskit,
+    "HardwareEfficientEmbeddingCircuit": HardwareEfficientEmbeddingCircuit,
     "HardwareEfficientEmbeddingCircuit_qiskit": HardwareEfficientEmbeddingCircuit_qiskit,
     "Hamiltonian_time_evolution_encoding": Hamiltonian_time_evolution_encoding_qiskit,
     "NoCircuit": "NoCircuit",
@@ -285,5 +315,6 @@ circuits_dictionary_qiskit = {
     "ChebyshevTowerAndHEE": ChebyshevTowerAndHEE,
     "SimpleAnalyticalCircuit": SimpleAnalyticalCircuit,
     "ChebyshevTowerAndHEE_repeat": ChebyshevTowerAndHEE_repeat,
-    "ChebyshevTowerAndHEE_rx": ChebyshevTowerAndHEE_rx
+    "ChebyshevTowerAndHEE_rx": ChebyshevTowerAndHEE_rx,
+    "HEEAndChebyshevTower": HEEAndChebyshevTower,
 }

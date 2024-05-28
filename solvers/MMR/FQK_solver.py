@@ -119,7 +119,7 @@ class FQK_solver:
         - qnn_: The FQK QNN.
         - P0_coef: The coefficients of the P0 observable to be used in the QNN squlearn evaluation
         """
-        FQK_Circuit = QiskitEncodingCircuit(FQK_kernel_circuit(self.encoding_circuit, self.num_qubits, only_one_variable = True, **self.circuit_information))
+        FQK_Circuit = QiskitEncodingCircuit(FQK_kernel_circuit(self.encoding_circuit(num_qubits = self.num_qubits, num_features = 1, **self.circuit_information) ), feature_label=["x", "y"]) 
         #Create P0 observable
         P0_, P0_coef = self.P0_squlearn(self.num_qubits)
         qnn_ = LowLevelQNN(FQK_Circuit, P0_, self.executor)
@@ -143,14 +143,18 @@ class FQK_solver:
         x_array = x_array.reshape(-1, 1) #reshape to column vector
         x_list_circuit_format = self.x_to_circuit_format(x_array)
 
-
-        output_f = qnn_.evaluate(x_list_circuit_format, [], coef, "f")["f"]  # (n*n, )
-        output_dfdx = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdx")["dfdx"] # (n*n, 2*m)
+        if qnn_.num_parameters != 0:
+            np.random.seed(1)
+            params = np.random.rand(qnn_.num_parameters)
+        else:
+            params = []
+        output_f = qnn_.evaluate(x_list_circuit_format, params, coef, "f")["f"]  # (n*n, )
+        output_dfdx = qnn_.evaluate(x_list_circuit_format, params, coef, "dfdx")["dfdx"] # (n*n, 2*m)
 
         print("output_f", output_f.shape)
         print("output_dfdx", output_dfdx.shape)
         if len(f_initial) == 2:
-            output_dfdxdx = qnn_.evaluate(x_list_circuit_format, [], coef, "dfdxdx")["dfdxdx"] # (n*n, 
+            output_dfdxdx = qnn_.evaluate(x_list_circuit_format, params, coef, "dfdxdx")["dfdxdx"] # (n*n, 
             output_dfdxdx = output_dfdxdx.reshape((len(x_array), len(x_array), len(x_array[0])*2, len(x_array[0])*2))
 
         else:

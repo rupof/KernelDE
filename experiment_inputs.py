@@ -143,7 +143,7 @@ num_layers_list = [5]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-experiment_QNN_combination_paper_Chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_floating_400", "QNN_pinned_400"], executor_type_list, quantum_bandwith])
+experiment_QNN_combination_paper_Chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_floating_100", "QNN_pinned_100"], executor_type_list, quantum_bandwith])
 #10
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
@@ -214,14 +214,14 @@ big_experiment = get_experiment_combination_list([function_list, encoding_circui
 
 
 encoding_circuit_list = ["SimpleAnalyticalCircuit"]
-function_list_ho = [("harmonic_oscillator", [1, -1], np.linspace(0, 1*3.14, 20))]
-executor_type_list = ["qasm_simulator"]    
+function_list = [ ("harmonic_oscillator", [np.cos(0), -np.sin(0)], np.linspace(-2*3.14, 2*3.14, 40)) ]
+executor_type_list = ["pennylane"]    
 num_qubits_list = [1]
-num_layers_list = [1]
+num_layers_list = [3]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-experiment_QNN_combination_ho_shots = get_experiment_combination_list([function_list_ho, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned"], executor_type_list, quantum_bandwith])
+experiment_QNN_combination_ho_ppt = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned_150"], executor_type_list, quantum_bandwith])
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
 function_list = [("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 20))]
@@ -291,6 +291,68 @@ sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
 exp_23 = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned_500"], executor_type_list, quantum_bandwith])
 
 
+function_list = [ ("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 20)), ]
+kernel_experiment_log1_for_ppt = get_experiment_combination_list([function_list, 
+                                                                   ["Separable_rx"], 
+                                                                  [8], [2], [1.5], 
+                                                                  ["PQK"], ["pennylane"], quantum_bandwith])
+function_list = [ ("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 20)), ]
+kernel_experiment_log2_for_ppt = get_experiment_combination_list([function_list, 
+                                                                   ["Separable_rx"], #HardwareEfficientEmbeddingCircuit
+                                                                  [7], [2], [1.5], 
+                                                                  ["FQK"], ["pennylane"], quantum_bandwith])
+
+function_list = [ ("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 20)), ]
+kernel_experiment_log3_for_ppt = get_experiment_combination_list([function_list, 
+                                                                   ["NoCircuit"], 
+                                                                  [7], [2], [0.4], 
+                                                                  ["classical_RBF"], ["pennylane"], quantum_bandwith])
+
+
+function_list = [ ("harmonic_oscillator", [np.cos(0), -np.sin(0)], np.linspace(-2*3.14, 2*3.14, 40)), ]
+kernel_experiment_sho_for_ppt = get_experiment_combination_list([function_list, 
+                                                                   ["HardwareEfficientEmbeddingCircuit"], 
+                                                                  [3], [1], [1.5], 
+                                                                  ["FQK"], ["pennylane"], quantum_bandwith])
+
+kernel_experiment_sho1_for_ppt = get_experiment_combination_list([function_list, 
+                                                                   ["NoCircuit"], 
+                                                                  [7], [2], [2.5], 
+                                                                  ["classical_RBF"], ["pennylane"], quantum_bandwith])
+
+
+encoding_circuit_list = ["ChebyshevTowerAndHEE"]
+function_list = [("paper", [1], np.linspace(0, 0.9, 20)), ("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 20))]
+executor_type_list = ["pennylane"]
+num_qubits_list = [2, 3, 4, 5, 6]
+num_layers_list = [5]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+exp_23 = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned_120", "QNN_floating_120"], executor_type_list, quantum_bandwith])
+
+encoding_circuit_list = ["ChebyshevTowerAndHEE"]
+function_list = [("paper", [1], np.linspace(0, 0.9, 20)), ("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 20))]
+executor_type_list = ["pennylane"]
+num_qubits_list = [2, 3, 4, 5, 6, 7, 8]
+num_layers_list = [3]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+exp_long_qnn = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned_120", "QNN_floating_120"], executor_type_list, quantum_bandwith])
+
+
+encoding_circuit_list = ["HEEAndChebyshevTower"]
+function_list = [("paper", [1], np.linspace(0, 0.9, 20)), ("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 20))]
+executor_type_list = ["pennylane"]
+num_qubits_list = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+num_layers_list = [1]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+exp_long_kernel = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["FQK", "PQK"], executor_type_list, quantum_bandwith])
+
+
 #QNN_floating
 experiment_list_total = [experiment_first_combination, #0
                         experiment_better_combination, #1
@@ -309,12 +371,20 @@ experiment_list_total = [experiment_first_combination, #0
                         experiment_QNN_test_with_RX, #14
                         QNN_log_test, #15
                         big_experiment, #16
-                        experiment_QNN_combination_ho_shots, #17
+                        experiment_QNN_combination_ho_ppt, #17
                         log_experiment_shots_and_variance, #18
                         log_experiment_chebyshev, #19
                         log_experiment_shots_and_variance_qiskit, #20
                         log_experiment_chebyshev_iteration, #21
                         damped_HO_experiment_chebyshev, #22
                         exp_23, #23
-                        ] 
+                        kernel_experiment_log1_for_ppt, #24
+                        kernel_experiment_log2_for_ppt, #25
+                        kernel_experiment_log3_for_ppt, #26
+                        kernel_experiment_sho_for_ppt, #27
+                        kernel_experiment_sho1_for_ppt, #28
+                        exp_long_qnn, #29
+                        exp_long_kernel, #30
+                        ] #26
+                        
 

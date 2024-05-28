@@ -31,7 +31,10 @@ def wrapper_experiment_solver(experiment):
     quantum_bandwidth = experiment["quantum_bandwidth"]
     x_span *= quantum_bandwidth
     executor_str = experiment["executor_type"]
-    encoding_circuit_label = experiment["circuit_information"]["encoding_circuit"].__name__
+    if experiment["circuit_information"]["encoding_circuit"] == "NoCircuit":
+        encoding_circuit_label = "NoCircuit"
+    else:
+        encoding_circuit_label = experiment["circuit_information"]["encoding_circuit"].__name__
     experiment_path = experiment["path"]
 
     executor_object = executor_type_dictionary[executor_str]
@@ -74,7 +77,7 @@ def wrapper_experiment_solver(experiment):
     elif experiment["method"].startswith("QNN"):
         method, boundary_handling, maxiter = experiment["method"].split("_")
         loss_ODE = ODELoss_wrapper(loss, grad_loss, initial_vec = f_initial, eta=1, boundary_handling = boundary_handling)
-        Optimizer = Adam(options={"maxiter": int(maxiter), "tol": 10**-4,  "log_file": experiment["path"] + f".log", "lr" : 0.02, "num_average":2 })
+        Optimizer = Adam(options={"maxiter": int(maxiter), "tol": 10**-4,  "log_file": experiment["path"] + f".log", "lr" : 0.05, "num_average":1 })
         #Optimizer = SGLBO(options={"maxiter": int(maxiter), "tol": 10**-4,  "log_file": experiment["path"] + f".log"})
         EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
         #pop the encoding_circuit from the dict
