@@ -3,6 +3,7 @@ import sys
 from itertools import product
 from circuits.circuits import * 
 from DE_Library.diferential_equation_functionals import *
+from squlearn.qnn import get_lr_decay
 
 
 
@@ -20,9 +21,19 @@ def get_experiment_combination_list(experimental_parameters):
     sorted_parameters = experimental_parameters
     for params in product(*sorted_parameters):
         function_pair, encoding_circuit, num_qubits, num_layers, sigma, method, executor_type, quantum_bandwidth = params
+        
         loss_name = function_pair[0]
         f_initial = function_pair[1]
         x_domain = function_pair[2]
+
+        if len(method) == 2:
+            method_name = method[0] 
+            method_info = method[1]
+
+        else:
+            method_name = method
+            method_info = None
+            
         
         experiment = {"circuit_information": {
             "encoding_circuit": circuits_dictionary_qiskit[encoding_circuit],
@@ -33,12 +44,13 @@ def get_experiment_combination_list(experimental_parameters):
             "loss": mapping_of_loss_functions[loss_name],
             "derivatives_of_loss": mapping_of_derivatives_of_loss_functions[loss_name],
             "grad_loss": mapping_of_grad_of_loss_functions[loss_name],
-            "method": method,
+            "method": method_name,
             "loss_name": loss_name,
             "executor_type": executor_type,
             "f_initial": f_initial,
             "quantum_bandwidth": quantum_bandwidth,
-            "x_domain": x_domain
+            "x_domain": x_domain,
+            "method_information": method_info,
         }
         experiment_list.append(experiment)
     return experiment_list
@@ -122,7 +134,7 @@ num_layers_list = [1]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-experiment_QNN_combination_ho = get_experiment_combination_list([function_list_ho, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["PQK", "FQK"], executor_type_list, quantum_bandwith])
+experiment_QNN_combination_ho = get_experiment_combination_list([function_list_ho, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("PQK"), ("FQK")], executor_type_list, quantum_bandwith])
 #8
 
 encoding_circuit_list = ["YZ_CX_EncodingCircuit"]
@@ -133,7 +145,14 @@ num_layers_list = [3]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-experiment_QNN_combination_paper = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned"], executor_type_list, quantum_bandwith])
+method_information = {"eta": 1, 
+                        "boundary_handling": "pinned", 
+                        "optimizer": "Adam", 
+                        "lr": 0.05, 
+                        "maxiter": 400, 
+                        "tol": 1e-4}
+method_list = [("QNN", method_information)]
+experiment_QNN_combination_paper = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, method_list, executor_type_list, quantum_bandwith])
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
 function_list = [("paper", [1], np.linspace(0, 0.9, 20))]
@@ -143,8 +162,24 @@ num_layers_list = [5]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-experiment_QNN_combination_paper_Chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_floating_100", "QNN_pinned_100"], executor_type_list, quantum_bandwith])
+method_information_pinned = {"eta": 1, 
+                        "boundary_handling": "pinned", 
+                        "optimizer": "Adam", 
+                        "lr": 0.05, 
+                        "maxiter": 100, 
+                        "tol": 1e-4}
+method_information_floating = {"eta": 1, 
+                        "boundary_handling": "floating", 
+                        "optimizer": "Adam", 
+                        "lr": 0.05, 
+                        "maxiter": 100, 
+                        "tol": 1e-4}
+
+method_list = [("QNN", method_information_floating), ("QNN", method_information_pinned)]
+experiment_QNN_combination_paper_Chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [method_information_pinned, method_information_floating], executor_type_list, quantum_bandwith])
 #10
+
+
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
 function_list = [("paper_decay_QNN", [1], np.linspace(0, 0.9, 20))]
@@ -154,8 +189,9 @@ num_layers_list = [5]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-experiment_QNN_decay_combination_paper_Chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_floating"], executor_type_list, quantum_bandwith])
-
+method_list = [("QNN", method_information_floating)]
+experiment_QNN_decay_combination_paper_Chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, method_list, executor_type_list, quantum_bandwith])
+#11
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE_repeat"]
 function_list = [("paper_decay_QNN", [1], np.linspace(0, 0.9, 20))]
@@ -165,7 +201,7 @@ num_layers_list = [5]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-experiment_QNN_decay_combination_paper_floating_Chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned"], executor_type_list, quantum_bandwith])
+experiment_QNN_decay_combination_paper_floating_Chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned)], executor_type_list, quantum_bandwith])
 #12
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
@@ -176,18 +212,46 @@ num_layers_list = [5]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-experiment_QNN_paper_decay_test = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_floating_1000", "QNN_pinned_1000"], executor_type_list, quantum_bandwith])
+method_information_pinned = {"eta": 1, 
+                        "boundary_handling": "pinned", 
+                        "optimizer": "Adam", 
+                        "lr": 0.05, 
+                        "maxiter": 1000, 
+                        "tol": 1e-4}
+method_information_floating = {"eta": 1, 
+                        "boundary_handling": "floating", 
+                        "optimizer": "Adam", 
+                        "lr": 0.05, 
+                        "maxiter": 1000, 
+                        "tol": 1e-4}
+
+method_list = [("QNN", method_information_floating), ("QNN", method_information_pinned)]
+experiment_QNN_paper_decay_test = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, method_list, executor_type_list, quantum_bandwith])
 #13
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
 function_list = [("simple_test_QNN", [1], np.linspace(0, 0.9, 4))]
 executor_type_list = ["pennylane"]    
-num_qubits_list = [2,3] #6
-num_layers_list = [1, 2] #5
+num_qubits_list = [3] #6
+num_layers_list = [1] #5
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-experiment_QNN_test_with_RX = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned"], executor_type_list, quantum_bandwith])
+method_information_pinned = {"eta": 1, 
+                        "boundary_handling": "pinned", 
+                        "optimizer": "Adam", 
+                        "lr": [get_lr_decay(0.05, 0.001, 10)(i) for i in range(0, 11)], 
+                        "maxiter": 10, 
+                        "tol": 1e-4,}
+method_information_pinned = {"eta": 1, 
+                        "boundary_handling": "pinned", 
+                        "optimizer": "SGLBO", 
+                        "lr": 0.05, 
+                        "maxiter": 10, 
+                        "tol": 1e-4,}
+
+method_list = [("QNN", method_information_floating), ("QNN", method_information_pinned)]
+experiment_QNN_test_with_RX = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned)], executor_type_list, quantum_bandwith])
 #14
 
 
@@ -199,7 +263,7 @@ num_layers_list = [5]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-QNN_log_test = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned"], executor_type_list, quantum_bandwith])
+QNN_log_test = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned)], executor_type_list, quantum_bandwith])
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE_repeat"]
 function_list = [("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 20)), ("simple_test_QNN", [1], np.linspace(0, 0.9, 20)), ("harmonic_oscillator", [1, 0], np.linspace(0, 0.9, 20))]
@@ -209,7 +273,7 @@ num_layers_list = [5, 10]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-big_experiment = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned"], executor_type_list, quantum_bandwith])
+big_experiment = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned)], executor_type_list, quantum_bandwith])
 
 
 
@@ -221,7 +285,7 @@ num_layers_list = [3]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-experiment_QNN_combination_ho_ppt = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned_150"], executor_type_list, quantum_bandwith])
+experiment_QNN_combination_ho_ppt = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned)], executor_type_list, quantum_bandwith])
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
 function_list = [("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 20))]
@@ -231,7 +295,7 @@ num_layers_list = [3]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-log_experiment_shots_and_variance = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned"], executor_type_list, quantum_bandwith])
+log_experiment_shots_and_variance = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned)], executor_type_list, quantum_bandwith])
 #18
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
@@ -242,7 +306,7 @@ num_layers_list = [3]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-log_experiment_chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_floating", "QNN_pinned"], executor_type_list, quantum_bandwith])
+log_experiment_chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned), ("QNN", method_information_floating) ], executor_type_list, quantum_bandwith])
 #19
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
@@ -253,7 +317,7 @@ num_layers_list = [3]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-log_experiment_shots_and_variance_qiskit = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned"], executor_type_list, quantum_bandwith])
+log_experiment_shots_and_variance_qiskit = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned)], executor_type_list, quantum_bandwith])
 
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
@@ -264,7 +328,13 @@ num_layers_list = [4]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-log_experiment_chebyshev_iteration = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned_1500"], executor_type_list, quantum_bandwith])
+method_information_pinned = {"eta": 1, 
+                        "boundary_handling": "pinned", 
+                        "optimizer": "Adam", 
+                        "lr": 0.05, 
+                        "maxiter": 1500, 
+                        "tol": 1e-4}
+log_experiment_chebyshev_iteration = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned)], executor_type_list, quantum_bandwith])
 #21
 
 
@@ -276,19 +346,19 @@ num_layers_list = [5]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-damped_HO_experiment_chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned_1000"], executor_type_list, quantum_bandwith])
+damped_HO_experiment_chebyshev = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned)], executor_type_list, quantum_bandwith])
 #22
 
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
 function_list = [("paper", [1], np.linspace(0, 0.9, 20))]
-executor_type_list = ["pennylane_shots_variance",   "pennylane_shots", "pennylane", "qasm_simulator_variance", "qasm_simulator"]
+executor_type_list = ["pennylane_shots_variance",   "pennylane_shots", "pennylane"]
 num_qubits_list = [6]
 num_layers_list = [5]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-exp_23 = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned_500"], executor_type_list, quantum_bandwith])
+exp_23 = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned)], executor_type_list, quantum_bandwith])
 
 
 function_list = [ ("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 20)), ]
@@ -329,7 +399,19 @@ num_layers_list = [5]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-exp_23 = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned_120", "QNN_floating_120"], executor_type_list, quantum_bandwith])
+method_information_pinned = {"eta": 1, 
+                        "boundary_handling": "pinned", 
+                        "optimizer": "Adam", 
+                        "lr": 0.05, 
+                        "maxiter": 120, 
+                        "tol": 1e-4}
+method_information_floating = {"eta": 1, 
+                        "boundary_handling": "floating", 
+                        "optimizer": "Adam", 
+                        "lr": 0.05, 
+                        "maxiter": 120, 
+                        "tol": 1e-4}
+exp_23 = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned), ("QNN", method_information_floating)], executor_type_list, quantum_bandwith])
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
 function_list = [("paper", [1], np.linspace(0, 0.9, 20)), ("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 20))]
@@ -339,7 +421,7 @@ num_layers_list = [3]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-exp_long_qnn = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["QNN_pinned_120", "QNN_floating_120"], executor_type_list, quantum_bandwith])
+exp_long_qnn = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned), ("QNN", method_information_floating)], executor_type_list, quantum_bandwith])
 
 
 encoding_circuit_list = ["HEEAndChebyshevTower"]
@@ -350,10 +432,87 @@ num_layers_list = [1]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-exp_long_kernel = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, ["FQK", "PQK"], executor_type_list, quantum_bandwith])
+exp_long_kernel = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("FQK"), ("PQK")
+                                                                                                                                                            ], executor_type_list, quantum_bandwith])
+
+encoding_circuit_list = ["ChebyshevTowerAndHEE"]
+function_list = [("paper", [1], np.linspace(0, 0.9, 20))]
+executor_type_list = ["pennylane_shots_variance",   "pennylane_shots"]
+num_qubits_list = [6]
+num_layers_list = [5]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+method_information_floating_1 = {"eta": 1, 
+                        "boundary_handling": "floating", 
+                        "optimizer": "Adam", 
+                        "lr": 0.05, 
+                        "maxiter": 250, 
+                        "tol": 1e-4,  
+                        "num_shots": 5000}
+method_information_floating_2 = {"eta": 1, 
+                        "boundary_handling": "floating", 
+                        "optimizer": "Adam", 
+                        "lr": 0.05, 
+                        "maxiter": 250, 
+                        "tol": 1e-4,  
+                        "num_shots": 8000}
+method_information_floating_no_shots = {"eta": 1, 
+                        "boundary_handling": "floating", 
+                        "optimizer": "Adam", 
+                        "lr": 0.05, 
+                        "maxiter": 250, 
+                        "tol": 1e-4,  }
+
+experiment_shots_prob_to_show = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_floating_1), ("QNN", method_information_floating_2)], executor_type_list, quantum_bandwith])
+experiment_shots_prob_to_show_no_shot = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_floating_no_shots)], ["pennylane"], quantum_bandwith])
+#concatenate both arrays
+experiment_shots_prob = experiment_shots_prob_to_show + experiment_shots_prob_to_show_no_shot
+#31
 
 
-#QNN_floating
+encoding_circuit_list = ["ChebyshevTowerAndHEE"]
+function_list = [("paper_decay_QNN", [1], np.linspace(0, 0.9, 22))]
+executor_type_list = ["pennylane"]    
+num_qubits_list = [6]
+num_layers_list = [5]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+
+method_information_floating_list = {"eta": 1, 
+                        "boundary_handling": "floating", 
+                        "optimizer": "Adam", 
+                        "lr": [get_lr_decay(0.05, 0.001, 250)(i) for i in range(0, 251)],
+                        "maxiter": 250, 
+                        "tol": 1e-5}
+
+method_information_floating_small_adam = {"eta": 1, 
+                        "boundary_handling": "floating", 
+                        "optimizer": "Adam", 
+                        "lr": 0.05, 
+                        "maxiter": 250, 
+                        "tol": 1e-5}
+
+method_information_floating_small_sglbo = {"eta": 1, 
+                        "boundary_handling": "floating", 
+                        "optimizer": "SGLBO", 
+                        "lr": 0.05, 
+                        "maxiter": 250, 
+                        "tol": 1e-5}
+
+method_information_floating_ = {"eta": 1, 
+                        "boundary_handling": "floating", 
+                        "optimizer": "SGLBO", 
+                        "lr": [get_lr_decay(0.05, 0.001, 250)(i) for i in range(0, 251)],
+                        "maxiter": 250, 
+                        "tol": 1e-5}
+
+
+method_list = [("QNN", method_information_floating_list), ("QNN", method_information_floating_small_adam), ("QNN", method_information_floating_small_sglbo), ("QNN", method_information_floating_)]
+experiment_QNN_paper_decay_test_benchmark = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, method_list, executor_type_list, quantum_bandwith])
+#32
+
 experiment_list_total = [experiment_first_combination, #0
                         experiment_better_combination, #1
                         experiment_2_combination, #2
@@ -385,6 +544,8 @@ experiment_list_total = [experiment_first_combination, #0
                         kernel_experiment_sho1_for_ppt, #28
                         exp_long_qnn, #29
                         exp_long_kernel, #30
+                        experiment_shots_prob, #31
+                        experiment_QNN_paper_decay_test_benchmark, #32
                         ] #26
                         
 

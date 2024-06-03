@@ -10,7 +10,7 @@ from solvers.MMR.PQK_solver import PQK_solver
 from solvers.MMR.FQK_solver import FQK_solver
 from solvers.MMR.kernel_solver import Solver
 from squlearn.qnn.loss import ODELoss
-from squlearn.optimizers import SLSQP, Adam #SGLBO
+from squlearn.optimizers import SLSQP, Adam, SGLBO
 from squlearn.qnn import QNNRegressor
 from squlearn.observables import *
 from DE_Library.qnn_and_kernels_wrappers import ODELoss_wrapper, executor_type_dictionary
@@ -38,6 +38,12 @@ def wrapper_experiment_solver(experiment):
     experiment_path = experiment["path"]
 
     executor_object = executor_type_dictionary[executor_str]
+
+    try:
+        if "num_shots" in experiment["method_information"]:
+            executor_object.set_shots(experiment["method_information"]["num_shots"])
+    except:
+        pass
 
     solution_label = f"{experiment['loss_name']}_f_initial"
 
@@ -74,11 +80,20 @@ def wrapper_experiment_solver(experiment):
                            analytical_derivative_rbf_kernel_2(x_span, x_span, sigma = experiment["sigma"])]
         OSolver = Solver(RBF_kernel_list)
         dict_to_save = {"sigma": experiment["sigma"]}
-    elif experiment["method"].startswith("QNN"):
-        method, boundary_handling, maxiter = experiment["method"].split("_")
-        loss_ODE = ODELoss_wrapper(loss, grad_loss, initial_vec = f_initial, eta=1, boundary_handling = boundary_handling)
-        Optimizer = Adam(options={"maxiter": int(maxiter), "tol": 10**-4,  "log_file": experiment["path"] + f".log", "lr" : 0.05, "num_average":1 })
-        #Optimizer = SGLBO(options={"maxiter": int(maxiter), "tol": 10**-4,  "log_file": experiment["path"] + f".log"})
+    elif experiment["method"] == "QNN":
+        method = experiment["method"], 
+        method_information_copy = experiment["method_information"].copy()
+        boundary_handling = method_information_copy.pop("boundary_handling")
+        eta = method_information_copy.pop("eta")
+        if "num_shots" in method_information_copy:
+            method_information_copy.pop("num_shots")
+
+        if method_information_copy["optimizer"] == "Adam":
+            Optimizer = Adam(options={"log_file": experiment["path"] + f".log", **method_information_copy})
+        elif method_information_copy["optimizer"] == "SGLBO":
+            Optimizer = SGLBO(options={"log_file": experiment["path"] + f".log", **method_information_copy })
+
+        loss_ODE = ODELoss_wrapper(loss, grad_loss, initial_vec = f_initial, eta=eta, boundary_handling = boundary_handling, true_solution=numerical_solution[:,0].flatten())
         EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
         #pop the encoding_circuit from the dict
         experiment["circuit_information"].pop("encoding_circuit")
@@ -136,7 +151,7 @@ def wrapper_experiment_solver(experiment):
                     "domain": experiment["x_domain"], 
                     "executor_type": executor_str,
                     "encoding_circuit": encoding_circuit_label,
-                    **experiment["circuit_information"]
+                    **experiment["circuit_information"],
     }
     
     try:
@@ -150,6 +165,12 @@ def wrapper_experiment_solver(experiment):
             pass
         else:
             dict_to_save[key] = value
+
+    if experiment["method_information"] is not None:
+        for key, value in experiment["method_information"].items():
+            dict_to_save[key] = value
+   
+
     print(dict_to_save)
     
     #result_dic_list.append(pd.DataFrame([dict_to_save]))

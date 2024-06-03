@@ -245,7 +245,7 @@ def PQK_kernel_wrapper(encoding_circuit):
 
 
 def ChebyshevTowerAndHEE(num_qubits, num_features, num_layers):
-    circuit =  ChebyshevTower(num_qubits=num_qubits, num_features=num_features, num_chebyshev=num_qubits, alpha = 2, hadamard_start=False)
+    circuit =  ChebyshevTower(num_qubits=num_qubits, num_features=num_features, num_chebyshev=num_qubits, alpha = 2, hadamard_start=False, rotation_gate = "ry")
     circuit += HEE_rzrxrz(num_qubits, num_features, num_layers)
     return circuit
 
