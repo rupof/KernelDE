@@ -20,6 +20,7 @@ from scipy.optimize import minimize
 
 from utils.rbf_kernel_tools import *
 
+
 class PQK_solver:
 
     def __init__(self, circuit_information, executor, envelope, regularization_parameter=1):
@@ -59,6 +60,30 @@ class PQK_solver:
             else:
                 text += f"{key}: {value},"
         return text
+    
+    def PQK_observable(self, measurement = "XYZ"):
+        """"
+        Returns the observable for the PQK solver
+
+        Args:
+
+        num_qubits (int): number of qubits in the system
+        measurement (str): measurement operator to be applied to the qubits (default: "XYZ")
+
+        Returns:
+        _measurement (list): list of SinglePauli objects representing the measurement operator (shape: num_qubits*len(measurement))
+
+        """
+        num_qubits = self.num_qubits
+        if isinstance(measurement, str):
+                    _measurement = []
+                    for m_str in measurement:
+                        if m_str not in ("X", "Y", "Z"):
+                            raise ValueError("Unknown measurement operator: {}".format(m_str))
+                        for i in range(num_qubits):
+                            _measurement.append(SinglePauli(num_qubits, i, op_str=m_str))
+        return _measurement
+    
     def PQK_QNN(self):
         """
         Create the PQK QNN for the given encoding circuit and the executor.
@@ -81,11 +106,8 @@ class PQK_solver:
             PQK_Circuit = PQK_kernel_wrapper(QiskitEncodingCircuit(EncodingCircuit(num_qubits = self.num_qubits, num_features = 1, **self.circuit_information)))
         except:
             PQK_Circuit = EncodingCircuit(num_qubits = self.num_qubits, num_features = 1, **self.circuit_information)
-        observable = SummedPaulis(self.num_qubits, op_str="XYZ", include_identity=True, full_sum=False) #i.e Summed Paulis for a 2 qubit system: IX, XI, IY, YI, IZ, ZI
-        observable.get_pauli_mapped([1 for i in range(observable.num_parameters)]) #
-        observable_coef = [1 for i in range(observable.num_parameters)]
-        qnn_ = LowLevelQNN(PQK_Circuit, observable, self.executor)
-        return qnn_, observable_coef
+        qnn_ = LowLevelQNN(PQK_Circuit, self.PQK_observable("XYZ"), self.executor)
+        return qnn_
     
     def get_PQK_kernel_derivatives(self, x_array, qnn_, coef, f_initial, **kwargs):
         """
@@ -105,42 +127,28 @@ class PQK_solver:
         """
         
         x_list_circuit_format = x_array
-
         if qnn_.num_parameters != 0:
             np.random.seed(1)
             params = np.random.rand(qnn_.num_parameters)
         else:
             params = []
 
-        output_f_column = qnn_.evaluate(x_list_circuit_format, params, coef, "f")["f"] # #shape (n,)    
-        output_dfdx_qnn_column = qnn_.evaluate(x_list_circuit_format, params, coef, "dfdx")["dfdx"] #shape (n, 1)
+        O = qnn_.evaluate(x_list_circuit_format, params, coef, "f")["f"] # #shape (n,num_qubits*len(measurement))
+        dOdx = qnn_.evaluate(x_list_circuit_format, params, coef, "dfdx")["dfdx"] #shape (n,num_qubits*len(measurement), 1)
 
-        #reshape the output_f_column, output_dfdx_qnn_column, output_dfdxdx_qnn_column to (n, n)
-        #output_f_column = output_f_column.reshape(-1, 1) #reshape to column vector    
-        print("shapes")
-        print("output_f_gramm_matrix", output_f_column.shape)
-        print("output_dfdx_gramm_matrix", output_dfdx_qnn_column.shape)
-
-        output_f_gramm_matrix = self.envelope(output_f_column, output_f_column, **kwargs) #shape (n, n) 
-        output_dfdx_gramm_matrix = self.analytical_derivative(output_f_column, output_f_column, **kwargs) * output_dfdx_qnn_column #shape (n, n) 
-
-        #Multiplication line above is the same as this:
-        #for i in range(len(output_dfdx_qnn_column)):
-        #    for j in range(len(output_dfdx_qnn_column)):
-        #        output_dfdx_gramm_matrix[i, j] = self.analytical_derivative(output_f_column, output_f_column, **kwargs)[i, j] * output_dfdx_qnn_column[i]
-
+        K_envelope = self.envelope(O, O, **kwargs) #shape (n, n) 
+        K_envelope_dx = np.einsum("njl->nj", self.analytical_derivative(O, O, **kwargs) * dOdx[:,:,0]) #shape (n, num_qubits*len(measurement), 1)
+        #
         if len(f_initial) == 2:
-            output_dfdxdx_qnn_column = qnn_.evaluate(x_list_circuit_format, params, coef, "dfdxdx")["dfdxdx"][:, 0]
-            output_dfdxdx_gramm_matrix = self.analytical_derivative_2(output_f_column, output_f_column, **kwargs) * output_dfdx_qnn_column + self.analytical_derivative(output_f_column, output_f_column, **kwargs) * output_dfdxdx_qnn_column 
+            dOdxdx = qnn_.evaluate(x_list_circuit_format, params, coef, "dfdxdx")["dfdxdx"] #shape (n, num_qubits*len(measurement), 1, 1)
+            K_envelope_dxdx = np.einsum("njl->nj", self.analytical_derivative_2(O, O, **kwargs) * dOdx[:,:,0] * dOdx[:,:,0])   
+            +  np.einsum("njl->nj", self.analytical_derivative(O, O, **kwargs) * dOdxdx[:,:,0,0]) #shape (n, num_qubits*len(measurement), 1)
+            
         else:
-            output_dfdxdx_gramm_matrix = np.zeros_like(output_f_gramm_matrix)
-             
-        print("shapes")
-        print("output_f_gramm_matrix", output_f_gramm_matrix.shape)
-        print("output_dfdx_gramm_matrix", output_dfdx_gramm_matrix.shape)
-        print("output_dfdxdx_gramm_matrix", output_dfdxdx_gramm_matrix.shape)
-
-        return output_f_gramm_matrix, output_dfdx_gramm_matrix, output_dfdxdx_gramm_matrix[:,:]
+            print("zero")
+            K_envelope_dxdx = np.zeros_like(K_envelope_dx)
+       
+        return K_envelope, K_envelope_dx, K_envelope_dxdx
     
 
     def solver(self, x_span, f_initial, L_functional, return_derivatives = False):
@@ -162,7 +170,8 @@ class PQK_solver:
         """
 
         ### PQK
-        PQK_qnn, obs_coef = self.PQK_QNN()
+        PQK_qnn = self.PQK_QNN()
+        obs_coef = []
         K_f, K_dfdx, K_dfdxdx = self.get_PQK_kernel_derivatives(x_span, PQK_qnn, obs_coef, f_initial, **self.envelope_parameters)
         print("K_f", K_f.shape)
         print("K_dfdx", K_dfdx.shape)
@@ -186,7 +195,8 @@ class PQK_solver:
         Returns:
         - output_f_gramm_matrix: The PQK kernel.
         """
-        PQK_qnn, obs_coef = self.PQK_QNN()
+        PQK_qnn = self.PQK_QNN()
+        obs_coef = []
         K_f, _ = self.get_PQK_kernel_derivatives(x_span, PQK_qnn, obs_coef, **self.envelope_parameters)
         return K_f
     

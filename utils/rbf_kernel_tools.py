@@ -1,4 +1,9 @@
 import numpy as np
+ #from sklearn import RBF 
+
+from sklearn.gaussian_process.kernels import RBF
+from scipy.spatial.distance import cdist
+
 
 
 
@@ -13,7 +18,8 @@ def rbf_kernel_manual(x, y, sigma=1):
     return kernel
 
 def analytical_derivative_rbf_kernel(x, y, sigma=1):
-    """
+    """-
+    assumes x, y are 1D arrays
     rbf_fun(x,y,sigma) = exp(-(x-y)**2/(2*sigma**2))
     df/dx = -exp(-(x-y)**2/(2*sigma**2)) * (2*(x-y)/(2*sigma**2))
     """
@@ -21,8 +27,46 @@ def analytical_derivative_rbf_kernel(x, y, sigma=1):
     for i in range(len(x)):
         for j in range(len(y)):
             derivative[i, j] = rbf_fun(x[i], y[j], sigma) * (-2*(x[i]-y[j])/(2*sigma**2))
-            print(derivative[i, j])
     return derivative
+
+def matrix_rbf(X , Y, sigma = 1):
+    return RBF(sigma)(X, Y)
+
+def matrix_rbf_dx_slow(X, Y, sigma=1):
+    """
+    $K(\vec{x},\vec{y}) = exp(-gamma*||\vec{x}-\vec{y}||^2)$
+    dK/dx_i = -2*gamma*(x_i-y_i)*K(\vec{x},\vec{y})
+    """    
+    gamma = 1/(2*sigma**2)
+    n, d = X.shape
+    
+    gram_dx = np.zeros((n, n, d))
+    #broadcasting
+    for l in range(d):
+        for i in range(n):
+            for j in range(n):
+                gram_dx[i, j, l] = -2*gamma*(X[i,l]-Y[j,l])*RBF(sigma)([X[i]], [Y[j]])[0,0]
+    return gram_dx
+
+
+
+def matrix_rbf_dxdx_slow(X, Y, sigma=1):
+    """
+    $K(\vec{x},\vec{y}) = exp(-gamma*||\vec{x}-\vec{y}||^2)$
+    dK/dx_i = -2*gamma*(x_i-y_i)*K(\vec{x},\vec{y})
+    """    
+    gamma = 1/(2*sigma**2)
+    n, d = X.shape
+    
+    gram_dx = np.zeros((n, n, d))
+    #broadcasting
+    for l in range(d):
+        for i in range(n):
+            for j in range(n):
+                gram_dx[i, j, l] = 2*gamma*(2*gamma*(X[i,l]-Y[j,l])**2-1)*RBF(sigma)([X[i]], [Y[j]])[0,0]
+    return gram_dx
+
+
 
 def analytical_derivative_rbf_kernel_2(x, y, sigma=1):
     """

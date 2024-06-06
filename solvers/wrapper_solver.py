@@ -15,6 +15,7 @@ from squlearn.qnn import QNNRegressor
 from squlearn.observables import *
 from DE_Library.qnn_and_kernels_wrappers import ODELoss_wrapper, executor_type_dictionary
 from utils.rbf_kernel_tools import analytical_derivative_rbf_kernel, analytical_derivative_rbf_kernel_2, rbf_kernel_manual
+from utils.rbf_kernel_tools import matrix_rbf, matrix_rbf_dx_slow, matrix_rbf_dxdx_slow
 from scipy.integrate import odeint
 
 
@@ -62,9 +63,9 @@ def wrapper_experiment_solver(experiment):
     if experiment["method"] == "PQK":
         OSolver = PQK_solver(experiment["circuit_information"],
                                 executor_object, 
-                                envelope={"function": rbf_kernel_manual, 
-                                            "derivative_function": analytical_derivative_rbf_kernel, 
-                                            "second_derivative_function": analytical_derivative_rbf_kernel_2,
+                                envelope={"function": matrix_rbf, 
+                                            "derivative_function": matrix_rbf_dx_slow, 
+                                            "second_derivative_function": matrix_rbf_dxdx_slow,
                                             "sigma": experiment["sigma"]})
         dict_to_save = {"sigma": experiment["sigma"]}
         experiment["circuit_information"].pop("encoding_circuit")

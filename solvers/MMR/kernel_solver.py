@@ -62,7 +62,7 @@ class Solver:
         alpha = alpha_[1:]
         if order == 0:
             return np.dot(kernel_tensor[order], alpha) + alpha_[0]
-        return np.dot(kernel_tensor[order], alpha)
+        return np.dot(kernel_tensor[order], alpha) 
 
     
     def loss_function(self, alpha_, L_functional, f_initial, x_span, kernel_tensor):

@@ -59,7 +59,7 @@ def Separable_rx_qiskit(num_qubits, num_layers, num_features = 1):
     QC = QuantumCircuit(num_qubits)
 
     symbol = "x"
-    features = ParameterVector(f"{symbol}", num_qubits)
+    features = ParameterVector(f"{symbol}", max(num_qubits, num_features))
     if num_features == 1:
         features = [features[0]]*num_qubits
     for layer in range(num_layers):
