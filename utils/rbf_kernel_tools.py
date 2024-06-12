@@ -53,7 +53,7 @@ def matrix_rbf_dx_slow(X, Y, sigma=1):
 def matrix_rbf_dxdx_slow(X, Y, sigma=1):
     """
     $K(\vec{x},\vec{y}) = exp(-gamma*||\vec{x}-\vec{y}||^2)$
-    dK/dx_i = -2*gamma*(x_i-y_i)*K(\vec{x},\vec{y})
+    dK/dx_ldx_l = -2*gamma*(x_i-y_i)*K(\vec{x},\vec{y})
     """    
     gamma = 1/(2*sigma**2)
     n, d = X.shape
@@ -65,6 +65,25 @@ def matrix_rbf_dxdx_slow(X, Y, sigma=1):
             for j in range(n):
                 gram_dx[i, j, l] = 2*gamma*(2*gamma*(X[i,l]-Y[j,l])**2-1)*RBF(sigma)([X[i]], [Y[j]])[0,0]
     return gram_dx
+
+def matrix_rbf_dxdy_slow(X, Y, sigma=1):
+    """
+    mixed derivative of the RBF kernel
+    dK/dx_ldx_p
+    """    
+    gamma = 1/(2*sigma**2)
+    n, d = X.shape
+    
+    gram_dx = np.zeros((n, n, d, d))
+    print("HALL1OO")
+
+    #broadcasting
+    for l in range(d):
+        for p in range(d):
+            for i in range(n):
+                for j in range(n):
+                    gram_dx[i, j, l, p] = 4*gamma**2*(X[i,l]-Y[j,l])*(X[i,p]-Y[j,p])*RBF(sigma)([X[i]], [Y[j]])[0,0]
+    return gram_dx #shape (n, n, d, d)
 
 
 

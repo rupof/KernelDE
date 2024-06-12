@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 from .kernel_solver import *
+from itertools import combinations
 
 
 
@@ -40,6 +41,7 @@ class PQK_solver:
         self.envelope = envelope["function"]
         self.analytical_derivative = envelope["derivative_function"]
         self.analytical_derivative_2 = envelope["second_derivative_function"]
+        self.mixed_derivative = envelope["mixed_derivative_function"]
         self.envelope_parameters = {key: value for key, value in envelope.items() if key not in {"function", "derivative_function", "second_derivative_function"}}
     
     def get_plotting_relevant_info(self):
@@ -133,6 +135,7 @@ class PQK_solver:
         else:
             params = []
 
+        print(x_list_circuit_format)
         O = qnn_.evaluate(x_list_circuit_format, params, coef, "f")["f"] # #shape (n,num_qubits*len(measurement))
         dOdx = qnn_.evaluate(x_list_circuit_format, params, coef, "dfdx")["dfdx"] #shape (n,num_qubits*len(measurement), 1)
 
@@ -141,9 +144,29 @@ class PQK_solver:
         #
         if len(f_initial) == 2:
             dOdxdx = qnn_.evaluate(x_list_circuit_format, params, coef, "dfdxdx")["dfdxdx"] #shape (n, num_qubits*len(measurement), 1, 1)
-            K_envelope_dxdx = np.einsum("njl->nj", self.analytical_derivative_2(O, O, **kwargs) * dOdx[:,:,0] * dOdx[:,:,0])   
-            +  np.einsum("njl->nj", self.analytical_derivative(O, O, **kwargs) * dOdxdx[:,:,0,0]) #shape (n, num_qubits*len(measurement), 1)
-            
+            first_term = np.einsum("njl->nj", self.analytical_derivative_2(O, O, **kwargs) * dOdx[:,:,0] * dOdx[:,:,0]) #shape (n, num_qubits*len(measurement), 1)
+            second_term = np.einsum("njl->nj", - self.analytical_derivative(O, O, **kwargs) * dOdxdx[:,:,0,0]) #shape (n, num_qubits*len(measurement), 1)
+            index_combinations_of_O = list(combinations(range(O.shape[1]), 2))
+            print("index_combinations_of_O", index_combinations_of_O)
+            mixed_g_dxdy = self.mixed_derivative(O, O, **kwargs) #shape (n, n, num_qubits*len(measurement), num_qubits*len(measurement))
+            mixed_term = np.zeros_like(second_term)
+
+            print("mixed_g_dxdy", mixed_g_dxdy)
+            for xi in range(K_envelope.shape[0]):
+                for xj in range(K_envelope.shape[1]):
+                    for i, j in index_combinations_of_O:
+                        mixed_term[xi, xj] += - 2 * O[xj,i] * O[xj,j] * mixed_g_dxdy[xi,xj,i,j]
+            #for i, j in index_combinations_of_O:
+            #    mixed_term += 2 * O[:,i] * O[:,j] * mixed_g_dxdy[:,:,i,j]
+
+            #print("analytical 2", self.analytical_derivative_2(O, O, **kwargs))
+            #print("dOdx", dOdx[:,:,0])
+            #print("dOdx * dOdx", dOdx[:,:,0]* dOdx[:,:,0])
+            print("HALL1O")
+            print("first_term", first_term)
+            print("second_term dOdxdx", second_term)
+            print("mixed_term", mixed_term)
+            K_envelope_dxdx = first_term + second_term + mixed_term
         else:
             print("zero")
             K_envelope_dxdx = np.zeros_like(K_envelope_dx)
