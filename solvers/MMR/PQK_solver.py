@@ -145,21 +145,10 @@ class PQK_solver:
         if len(f_initial) == 2:
             dOdxdx = qnn_.evaluate(x_list_circuit_format, params, coef, "dfdxdx")["dfdxdx"] #shape (n, num_qubits*len(measurement), 1, 1)
             first_term = np.einsum("njl,nl,nl->nj", self.analytical_derivative_2(O, O, **kwargs), dOdx[:,:,0], dOdx[:,:,0]) #shape (n, num_qubits*len(measurement), 1)
-            second_term = np.einsum('njl,nl->nj', self.analytical_derivative(O, O, **kwargs) , dOdxdx[:,:,0,0])
-            index_combinations_of_O = list(combinations(range(O.shape[1]), 2))
-            #self.mixed_derivative(O, O, **kwargs) #shape (n, n, num_qubits*len(measurement), num_qubits*len(measurement))
-                  
+            second_term = np.einsum('njl,nl->nj', self.analytical_derivative(O, O, **kwargs) , dOdxdx[:,:,0,0]) 
+            index_combinations_of_O = list(combinations(range(O.shape[1]), 2))                  
             for k, m in index_combinations_of_O:
                 mixed_term = 2 * np.einsum('ij,i,i->ij', self.mixed_derivative(O, O, **kwargs) [:,:, k,m], dOdx[:,k,0], dOdx[:,m,0])
-                #for i in range(O.shape[0]):
-                #    print(k, m)
-                #    print(mixed_g_dxdy[:,:, k,m])
-                #    for j in range(O.shape[0]):
-                #        mixed_term[i, j] +=  2 * dOdx[i,k] * dOdx[i,m] * mixed_g_dxdy[i,j,k,m]
-
-            #for k, m in index_combinations_of_O:
-            #    mixed_term = np.einsum('njl,nl->nj', mixed_g_dxdy[:,:, k,m], dOdxdx[:,:,0,0])
-            #print("mixed part", mixed_term)
             K_envelope_dxdx = first_term + second_term + mixed_term
         else:
             print("zero")
