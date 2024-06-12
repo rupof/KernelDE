@@ -464,6 +464,18 @@ sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
 exp_long_kernel = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("FQK"), ("PQK")
                                                                                                                                                             ], executor_type_list, quantum_bandwith])
 
+
+encoding_circuit_list = ["HEEAndChebyshevTower"]
+function_list = [("paper", [1], np.linspace(0, 0.9, 30)), ("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 30))]
+executor_type_list = ["pennylane"]
+num_qubits_list = [2, 3, 4, 5, 6, 7, 8]
+num_layers_list = [1, 3, 6, 9]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+exp_long_only_PQK_kernel = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("PQK")
+                                                                                                                                                            ], executor_type_list, quantum_bandwith])
+
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
 function_list = [("paper", [1], np.linspace(0, 0.9, 20))]
 executor_type_list = ["pennylane_shots_variance",   "pennylane_shots"]
@@ -575,6 +587,7 @@ experiment_list_total = [experiment_first_combination, #0
                         exp_long_kernel, #30
                         experiment_shots_prob, #31
                         experiment_QNN_paper_decay_test_benchmark, #32
+                        exp_long_only_PQK_kernel, #33
                         ] #26
                         
 
