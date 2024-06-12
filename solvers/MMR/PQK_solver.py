@@ -42,7 +42,7 @@ class PQK_solver:
         self.analytical_derivative = envelope["derivative_function"]
         self.analytical_derivative_2 = envelope["second_derivative_function"]
         self.mixed_derivative = envelope["mixed_derivative_function"]
-        self.envelope_parameters = {key: value for key, value in envelope.items() if key not in {"function", "derivative_function", "second_derivative_function"}}
+        self.envelope_parameters = {key: value for key, value in envelope.items() if key not in {"function", "derivative_function", "second_derivative_function", "mixed_derivative_function"}}
     
     def get_plotting_relevant_info(self):
         info =  self.circuit_information_complete
@@ -178,6 +178,7 @@ class PQK_solver:
         ### PQK
         PQK_qnn = self.PQK_QNN()
         obs_coef = []
+        print(self.envelope_parameters)
         K_f, K_dfdx, K_dfdxdx = self.get_PQK_kernel_derivatives(x_span, PQK_qnn, obs_coef, f_initial, **self.envelope_parameters)
         print("K_f", K_f.shape)
         print("K_dfdx", K_dfdx.shape)
