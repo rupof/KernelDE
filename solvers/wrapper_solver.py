@@ -15,7 +15,7 @@ from squlearn.qnn import QNNRegressor
 from squlearn.observables import *
 from DE_Library.qnn_and_kernels_wrappers import ODELoss_wrapper, executor_type_dictionary
 from utils.rbf_kernel_tools import analytical_derivative_rbf_kernel, analytical_derivative_rbf_kernel_2, rbf_kernel_manual
-from utils.rbf_kernel_tools import matrix_rbf, matrix_rbf_dx_slow, matrix_rbf_dxdx_slow
+from utils.rbf_kernel_tools import matrix_rbf, matrix_rbf_dx_slow, matrix_rbf_dxdx_slow, matrix_rbf_dxdy_slow
 from scipy.integrate import odeint
 
 
@@ -66,6 +66,7 @@ def wrapper_experiment_solver(experiment):
                                 envelope={"function": matrix_rbf, 
                                             "derivative_function": matrix_rbf_dx_slow, 
                                             "second_derivative_function": matrix_rbf_dxdx_slow,
+                                            "mixed_derivative_function": matrix_rbf_dxdy_slow,
                                             "sigma": experiment["sigma"]})
         dict_to_save = {"sigma": experiment["sigma"]}
         experiment["circuit_information"].pop("encoding_circuit")
