@@ -508,7 +508,7 @@ method_information_floating_no_shots = {"eta": 1,
 experiment_shots_prob_to_show = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_floating_1), ("QNN", method_information_floating_2)], executor_type_list, quantum_bandwith])
 experiment_shots_prob_to_show_no_shot = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_floating_no_shots)], ["pennylane"], quantum_bandwith])
 #concatenate both arrays
-experiment_shots_prob = experiment_shots_prob_to_show + experiment_shots_prob_to_show_no_shot
+experiment_shots_prob = experiment_shots_prob_to_show #+ experiment_shots_prob_to_show_no_shot
 #31
 
 
@@ -550,7 +550,9 @@ method_information_floating_ = {"eta": 1,
                         "tol": 1e-5}
 
 
-method_list = [("QNN", method_information_floating_list), ("QNN", method_information_floating_small_adam), ("QNN", method_information_floating_small_sglbo), ("QNN", method_information_floating_)]
+#method_list = [("QNN", method_information_floating_list), ("QNN", method_information_floating_small_adam), ("QNN", method_information_floating_small_sglbo), ("QNN", method_information_floating_)]
+method_list = [("QNN", method_information_floating_list), ("QNN", method_information_floating_small_adam),]
+
 experiment_QNN_paper_decay_test_benchmark = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, method_list, executor_type_list, quantum_bandwith])
 #32
 
