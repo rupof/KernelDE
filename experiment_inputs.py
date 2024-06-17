@@ -556,6 +556,27 @@ method_list = [("QNN", method_information_floating_list), ("QNN", method_informa
 experiment_QNN_paper_decay_test_benchmark = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, method_list, executor_type_list, quantum_bandwith])
 #32
 
+encoding_circuit_list = ["ChebyshevTowerAndHEE"]
+function_list = [("paper", [1], np.linspace(0, 0.9, 4))]
+executor_type_list = ["pennylane_shots_variance",   "pennylane_shots"]
+num_qubits_list = [2]
+num_layers_list = [1]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+method_information_floating_1 = {"eta": 1, 
+                        "boundary_handling": "floating", 
+                        "optimizer": "Adam", 
+                        "lr": 0.05, 
+                        "maxiter": 5, 
+                        "tol": 1e-4,  
+                        "num_shots": 5000}
+
+
+experiment_shots_fast_test = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_floating_1)], executor_type_list, quantum_bandwith])
+#concatenate both arrays
+#31
+
 experiment_list_total = [experiment_first_combination, #0
                         experiment_better_combination, #1
                         experiment_2_combination, #2
@@ -590,6 +611,7 @@ experiment_list_total = [experiment_first_combination, #0
                         experiment_shots_prob, #31
                         experiment_QNN_paper_decay_test_benchmark, #32
                         exp_long_only_PQK_kernel, #33
+                        experiment_shots_fast_test, #34
                         ] #26
                         
 
