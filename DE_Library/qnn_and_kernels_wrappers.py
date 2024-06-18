@@ -69,4 +69,6 @@ executor_type_dictionary = {
     "pennylane_shots_variance": Executor("default.qubit", shots=5000, seed = 1),
     "qasm_simulator": Executor("qasm_simulator", shots=5000, seed=1),
     "pennylane_shots": Executor("default.qubit", shots=5000, seed = 1),
+    "qiskit_shots_variance": Executor("qiskit", shots=5000, seed=1),
+    "qiskit_shots": Executor("qiskit", shots=5000, seed=1)
 }

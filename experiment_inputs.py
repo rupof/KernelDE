@@ -478,7 +478,7 @@ exp_long_only_PQK_kernel = get_experiment_combination_list([function_list, encod
 
 encoding_circuit_list = ["ChebyshevTowerAndHEE"]
 function_list = [("paper", [1], np.linspace(0, 0.9, 20))]
-executor_type_list = ["pennylane_shots_variance",   "pennylane_shots"]
+executor_type_list = ["qiskit_shots_variance",   "qiskit_shots"]
 num_qubits_list = [6]
 num_layers_list = [5]
 quantum_bandwith = [1]
