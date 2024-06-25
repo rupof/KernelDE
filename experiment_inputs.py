@@ -383,7 +383,8 @@ function_list = [ ("harmonic_oscillator", [np.cos(0), -np.sin(0)], np.linspace(-
 kernel_experiment_sho_for_ppt = get_experiment_combination_list([function_list, 
                                                                    ["HardwareEfficientEmbeddingCircuit"], 
                                                                   [3], [1], [1.5], 
-                                                                  ["FQK"], ["pennylane"], quantum_bandwith])
+                                                                  ["FQK", "PQK"], ["pennylane"], quantum_bandwith])
+
 
 kernel_experiment_sho1_for_ppt = get_experiment_combination_list([function_list, 
                                                                    ["NoCircuit"], 

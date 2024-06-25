@@ -84,7 +84,6 @@ class Solver:
         sum2 = np.sum((f_alpha_tensor[:,0][:len(f_initial)] - f_initial)**2) #Initial condition
         L = sum2 + sum1 * self.regularization_parameter
 
-        
         return L
     
     def create_kernel_L_functional(self, L_functional):
@@ -92,6 +91,11 @@ class Solver:
             f_tensor = get_differentials(f_alpha_tensor, x_span)
             return L_functional(f_tensor)
         return kernel_L_functional
+    
+    def create_loss_function(self, L_functional, f_initial, x_span):
+        def loss_function(alpha_):
+            return self.loss_function(alpha_, L_functional, f_initial, x_span, self.kernel_tensor)
+        return loss_function
 
 
     def solver(self, x_span, f_initial, L_functional):
@@ -131,11 +135,14 @@ class Solver:
 
         functional_loss_by_iteration = []
         prediction_by_iteration = []
-
+        
         def store_loss(x):
             functional_loss_by_iteration.append(self.loss_function(x, _L_functional, f_initial, x_span, self.kernel_tensor))
             prediction_by_iteration.append(self.f_alpha_order(x, self.kernel_tensor, 0))
-        result = minimize(self.loss_function, alpha_0, args=(_L_functional, f_initial, x_span, self.kernel_tensor),
+
+        loss_function_ = self.create_loss_function(_L_functional, f_initial, x_span)
+        
+        result = minimize(loss_function_, alpha_0, 
             options={'disp': False, 'maxiter': 10000}, callback=store_loss)
         optimal_alpha = result.x
         solution = self.f_alpha_order(optimal_alpha, self.kernel_tensor, 0)
