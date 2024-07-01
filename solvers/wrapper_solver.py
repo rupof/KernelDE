@@ -95,7 +95,7 @@ def wrapper_experiment_solver(experiment):
         elif method_information_copy["optimizer"] == "SGLBO":
             Optimizer = SGLBO(options={"log_file": experiment["path"] + f".log", **method_information_copy })
 
-        loss_ODE = ODELoss_wrapper(loss, grad_loss, initial_vec = f_initial, eta=eta, boundary_handling = boundary_handling, true_solution=numerical_solution[:,0].flatten())
+        loss_ODE = ODELoss(loss, grad_loss, initial_vec = f_initial, eta=eta, boundary_handling = boundary_handling, true_solution=numerical_solution[:,0].flatten())
         EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
         #pop the encoding_circuit from the dict
         experiment["circuit_information"].pop("encoding_circuit")
@@ -120,7 +120,7 @@ def wrapper_experiment_solver(experiment):
             param_ini,
             param_obs,
             opt_param_op = False,
-            variance_for_qnn_regularization = variance_for_qnn_regularization
+            variance = variance_for_qnn_regularization
         )    
 
         y_ODE = np.zeros((x_span.shape[0]))

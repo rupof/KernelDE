@@ -85,7 +85,6 @@ def grad_loss_paper_decay_QNN(f_alpha_tensor):
     return [dFdf, 1, 0]
 
 
-
 def derivatives_loss_paper(f_alpha_tensor, x):
         """
         0 = -lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) - lamb * k * f - df/dx

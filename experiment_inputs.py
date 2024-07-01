@@ -508,6 +508,8 @@ method_information_floating_no_shots = {"eta": 1,
 
 experiment_shots_prob_to_show = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_floating_1), ("QNN", method_information_floating_2)], executor_type_list, quantum_bandwith])
 experiment_shots_prob_to_show_no_shot = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_floating_no_shots)], ["pennylane"], quantum_bandwith])
+experiment_shots_prob_to_show = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_floating_1)], executor_type_list, quantum_bandwith])
+
 #concatenate both arrays
 experiment_shots_prob = experiment_shots_prob_to_show #+ experiment_shots_prob_to_show_no_shot
 #31
