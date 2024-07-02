@@ -580,6 +580,37 @@ experiment_shots_fast_test = get_experiment_combination_list([function_list, enc
 #concatenate both arrays
 #31
 
+encoding_circuit_list = ["HEEAndChebyshevTower"]
+function_list = [("paper", [1], np.linspace(0, 0.9, 30)), 
+                 ("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 30)),
+                 ("polynomial_with_exp", [3], np.linspace(0, 0.9, 30)),
+                 ("paper_decay_QNN", [1], np.linspace(0, 0.9, 30)),
+                ("simple_test_QNN", [1], np.linspace(0, 0.9, 30)),
+                ("paper_nontrivial_dynamics", [0.75], np.linspace(0, 0.9, 30)),
+                ("logistic_equation", [0.1], np.linspace(0, 0.9, 30)),
+                 ]
+executor_type_list = ["pennylane"]
+num_qubits_list = [2,3,4,5,6,7,8]
+num_layers_list = [1]
+quantum_bandwith = [1]
+gamma_classical_bandwidth_list = np.array([1])
+sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
+method_information = {"eta": 1, }
+eta_list = np.logspace(-2, 1, 8)
+method_information_pair = [("PQK", {"eta": eta}) for eta in eta_list] + [("FQK", {"eta": eta}) for eta in eta_list]
+exp_long_only_PQK_kernel_eta = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, 
+                                                            num_layers_list, sigma_classical_bandwidth_list, method_information_pair, executor_type_list, quantum_bandwith])
+
+
+#1. Paper: df/dx + lamb * np.exp(-lamb * x * k) * np.sin(lamb * x) + lamb * k * f = 0, f(0) = 1 paper
+#2. Log ODE: df/dx - lamb * np.exp(f * k) = 0, f(0.01) = np.log(0.01) log_ode
+#3. Polynomial with exp: 2*f+4*cos(x)-8*sin(x) - df/dx = 0, f(0) = 3 polynomial_with_exp
+#4. Paper decay QNN: df/dx + lamb * f*(k + tan(lamb*x)) = 0, f(0) = 1 paper_decay_QNN
+#5. Simple test QNN: df/dx + sin(x) = 0, f(0) = 1 simple_test_QNN
+#6. Paper nontrivial dynamics: dfdx -4*f + 6*f**2 - np.sin(50*x)-f*np.cos(25*x) + 0.5 = 0, f(0) = 0.75 paper_nontrivial_dynamics
+#7. Bernoulli DE: dfdx - (-2*x + f)**2 - 7 = 0, f(0) = 0 bernoulli_DE
+#8. Arbitrary ODE: -f + x**3 + x**2 + np.sin(f*30) -dfdx = 0, f(0) = 0  arbitrary_ode
+
 experiment_list_total = [experiment_first_combination, #0
                         experiment_better_combination, #1
                         experiment_2_combination, #2
@@ -615,6 +646,8 @@ experiment_list_total = [experiment_first_combination, #0
                         experiment_QNN_paper_decay_test_benchmark, #32
                         exp_long_only_PQK_kernel, #33
                         experiment_shots_fast_test, #34
+                        exp_long_only_PQK_kernel_eta, #35
+
                         ] #26
                         
 

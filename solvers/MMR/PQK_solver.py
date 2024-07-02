@@ -178,11 +178,7 @@ class PQK_solver:
         ### PQK
         PQK_qnn = self.PQK_QNN()
         obs_coef = []
-        print(self.envelope_parameters)
         K_f, K_dfdx, K_dfdxdx = self.get_PQK_kernel_derivatives(x_span, PQK_qnn, obs_coef, f_initial, **self.envelope_parameters)
-        print("K_f", K_f.shape)
-        print("K_dfdx", K_dfdx.shape)
-        print("K_dfdxdx", K_dfdxdx.shape)
         kernel_list = np.array([K_f, K_dfdx, K_dfdxdx])
         Solver_ = Solver(kernel_list, self.regularization_parameter)
         solution_ = Solver_.solver(x_span, f_initial, L_functional = L_functional)

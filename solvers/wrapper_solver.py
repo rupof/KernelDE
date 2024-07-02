@@ -55,25 +55,34 @@ def wrapper_experiment_solver(experiment):
         numerical_solution = odeint(experiment["derivatives_of_loss"], f_initial, x_span[:])
         cache[solution_label] = numerical_solution
 
+
+    try:
+        eta = experiment["method_information"]["eta"]
+    except:
+        eta = 1
+
     #print experiment details
 
     print("Experiment details:")
     print(experiment)
 
     if experiment["method"] == "PQK":
+        #get experiment["method_information"]["eta"] if not 1
+        
         OSolver = PQK_solver(experiment["circuit_information"],
                                 executor_object, 
                                 envelope={"function": matrix_rbf, 
                                             "derivative_function": matrix_rbf_dx_slow, 
                                             "second_derivative_function": matrix_rbf_dxdx_slow,
                                             "mixed_derivative_function": matrix_rbf_dxdy_slow,
-                                            "sigma": experiment["sigma"]})
+                                            "sigma": experiment["sigma"]}, 
+                                regularization_parameter=eta)
         dict_to_save = {"sigma": experiment["sigma"]}
         experiment["circuit_information"].pop("encoding_circuit")
 
     elif experiment["method"] == "FQK":
         OSolver = FQK_solver(experiment["circuit_information"],
-                                executor_object)
+                                executor_object, regularization_parameter=eta)
         experiment["circuit_information"].pop("encoding_circuit")
 
     elif experiment["method"] == "classical_RBF":
@@ -143,11 +152,13 @@ def wrapper_experiment_solver(experiment):
 
     
     
-    mse = np.mean((f_sol - cache[solution_label][:,0].flatten()))**2
+    mse = np.mean((f_sol - cache[solution_label][:,0].flatten())**2)
+    mse_normalized = np.mean(((f_sol - cache[solution_label][:,0].flatten())**2)/cache[solution_label][:,0].flatten())
 
     dict_to_save = {"f_sol": f_sol, 
                     "optimal_alpha": optimal_alpha, 
                     "mse": mse, 
+                    "mse_normalized": mse_normalized,
                     "method": experiment["method"],
                     "loss_name": experiment["loss_name"],
                     "domain": experiment["x_domain"], 
