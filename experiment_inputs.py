@@ -485,11 +485,11 @@ num_layers_list = [5]
 quantum_bandwith = [1]
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-method_information_floating_1 = {"eta": 1, 
-                        "boundary_handling": "floating", 
+method_information_pinned_1 = {"eta": 1, 
+                        "boundary_handling": "pinned", 
                         "optimizer": "Adam", 
                         "lr": 0.05, 
-                        "maxiter": 250, 
+                        "maxiter": 100, 
                         "tol": 1e-4,  
                         "num_shots": 5000}
 method_information_floating_2 = {"eta": 1, 
@@ -506,9 +506,11 @@ method_information_floating_no_shots = {"eta": 1,
                         "maxiter": 250, 
                         "tol": 1e-4,  }
 
-experiment_shots_prob_to_show = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_floating_1), ("QNN", method_information_floating_2)], executor_type_list, quantum_bandwith])
-experiment_shots_prob_to_show_no_shot = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_floating_no_shots)], ["pennylane"], quantum_bandwith])
-experiment_shots_prob_to_show = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_floating_1)], executor_type_list, quantum_bandwith])
+#experiment_shots_prob_to_show = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_floating_1), ("QNN", method_information_floating_2)], executor_type_list, quantum_bandwith])
+#experiment_shots_prob_to_show_no_shot = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_floating_no_shots)], ["pennylane"], quantum_bandwith])
+
+
+experiment_shots_prob_to_show = get_experiment_combination_list([function_list, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("QNN", method_information_pinned_1)], executor_type_list, quantum_bandwith])
 
 #concatenate both arrays
 experiment_shots_prob = experiment_shots_prob_to_show #+ experiment_shots_prob_to_show_no_shot
