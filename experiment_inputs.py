@@ -492,7 +492,7 @@ method_information_pinned_1 = {"eta": 1,
                         "lr": 0.05, 
                         "maxiter": 100, 
                         "tol": 1e-4,  
-                        "num_shots": 5000}
+                        "num_shots": None}
 method_information_floating_2 = {"eta": 1, 
                         "boundary_handling": "floating", 
                         "optimizer": "Adam", 
