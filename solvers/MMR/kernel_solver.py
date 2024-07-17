@@ -126,19 +126,19 @@ class Solver:
         """
 
         alpha_0 = np.ones(len(x_span) + 1)
-        print(len(self.kernel_tensor))
 
         _L_functional = self.create_kernel_L_functional(L_functional)
 
 
-        print("Initial loss: ", self.loss_function(alpha_0, _L_functional, f_initial, x_span, self.kernel_tensor))
 
-        functional_loss_by_iteration = []
-        prediction_by_iteration = []
+        L_loss_by_iteration = []
+        f_by_iteration = []
+        f_prime_by_iteration = []
         
         def store_loss(x):
-            functional_loss_by_iteration.append(self.loss_function(x, _L_functional, f_initial, x_span, self.kernel_tensor))
-            prediction_by_iteration.append(self.f_alpha_order(x, self.kernel_tensor, 0))
+            L_loss_by_iteration.append(self.loss_function(x, _L_functional, f_initial, x_span, self.kernel_tensor))
+            f_by_iteration.append(self.f_alpha_order(x, self.kernel_tensor, 0))
+            f_prime_by_iteration.append(self.f_alpha_order(x, self.kernel_tensor, 1))
 
         loss_function_ = self.create_loss_function(_L_functional, f_initial, x_span)
         
@@ -146,6 +146,6 @@ class Solver:
             options={'disp': False, 'maxiter': 10000}, callback=store_loss)
         optimal_alpha = result.x
         solution = self.f_alpha_order(optimal_alpha, self.kernel_tensor, 0)
-        return [solution, optimal_alpha], [functional_loss_by_iteration, prediction_by_iteration]
+        return [solution, optimal_alpha], [L_loss_by_iteration, f_by_iteration, f_prime_by_iteration]
 
     

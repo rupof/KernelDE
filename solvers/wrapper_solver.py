@@ -19,9 +19,37 @@ from utils.rbf_kernel_tools import matrix_rbf, matrix_rbf_dx_slow, matrix_rbf_dx
 from scipy.integrate import odeint
 
 
+class CircuitInformation:
+    def __init__(self, experiment):
+        self.x_span = experiment["x_domain"] * experiment["quantum_bandwidth"]
+        self.method = experiment["method"]
+        # self.eta = experiment["method_information"]["eta"]
+        # self.quantum_bandwidth = experiment["quantum_bandwidth"]
+        self.executor_str = experiment["executor_type"]
+        self.encoding_circuit_label = (
+            "NoCircuit"
+            if experiment["circuit_information"]["encoding_circuit"] == "NoCircuit"
+            else experiment["circuit_information"]["encoding_circuit"].__name__
+        )
+        #self.experiment_path = experiment["path"]
+        self.executor_object = executor_type_dictionary[self.executor_str]
+        self.num_qubits = experiment["circuit_information"]["num_qubits"]
+        self.circuit_information = experiment["circuit_information"]
+    def get_info(self):
+        return {"x_span": self.x_span, "method": self.method, "executor_str": self.executor_str, "encoding_circuit_label": self.encoding_circuit_label, "num_qubits": self.num_qubits}
+    
+    def __eq__(self, other):
+        if isinstance(other, CircuitInformation):
+            return np.array_equal(self.x_span, other.x_span) and self.method == other.method and self.executor_str == other.executor_str and self.encoding_circuit_label == other.encoding_circuit_label and self.num_qubits == other.num_qubits
+        return False
+    def __hash__(self):
+        return hash((tuple(self.x_span), self.method, self.executor_str, self.encoding_circuit_label, self.num_qubits))
 
-def get_mse_loss(functional_loss_by_iteration, y_exact):
-    return np.mean((np.array(functional_loss_by_iteration)-y_exact)**2, axis = 1)
+
+#np.mean(((y[:]-1)**2)[:,0], axis=1)
+def get_f_loss(f_by_iteration, y_exact, axis = 1):
+    return np.mean((f_by_iteration-y_exact)**2, axis = axis)
+   
 cache = {}
 
 def wrapper_experiment_solver(experiment):
@@ -46,15 +74,18 @@ def wrapper_experiment_solver(experiment):
     except:
         pass
 
-    solution_label = f"{experiment['loss_name']}_f_initial"
+    f_solution_label = f"f_{experiment['loss_name']}"
+    dfdx_solution_label = f"dfdx_{experiment['loss_name']}"
 
-    if solution_label in cache:
-        numerical_solution = cache[solution_label]
+
+    if f_solution_label in cache:
+        f_numerical_solution = cache[f_solution_label] #f_numerical_solution: shape (x_span.shape[0],)
+        dfdx_numerical_solution = cache[dfdx_solution_label]
     else:
-        print("Experiment ", experiment["loss_name"], " with f_initial")
-        numerical_solution = odeint(experiment["derivatives_of_loss"], f_initial, x_span[:])
-        cache[solution_label] = numerical_solution
-
+        f_numerical_solution = odeint(experiment["derivatives_of_loss"], f_initial, x_span[:]).flatten()
+        cache[f_solution_label] = f_numerical_solution
+        dfdx_numerical_solution = np.gradient(f_numerical_solution, x_span)
+        cache[dfdx_solution_label] = dfdx_numerical_solution
 
     try:
         eta = experiment["method_information"]["eta"]
@@ -63,8 +94,6 @@ def wrapper_experiment_solver(experiment):
 
     #print experiment details
 
-    print("Experiment details:")
-    print(experiment)
 
     if experiment["method"] == "PQK":
         #get experiment["method_information"]["eta"] if not 1
@@ -74,15 +103,16 @@ def wrapper_experiment_solver(experiment):
                                 envelope={"function": matrix_rbf, 
                                             "derivative_function": matrix_rbf_dx_slow, 
                                             "second_derivative_function": matrix_rbf_dxdx_slow,
-                                            "mixed_derivative_function": matrix_rbf_dxdy_slow,
+                                               "mixed_derivative_function": matrix_rbf_dxdy_slow,
                                             "sigma": experiment["sigma"]}, 
-                                regularization_parameter=eta)
+                                regularization_parameter=eta,
+                                CircuitInformation = CircuitInformation(experiment))
         dict_to_save = {"sigma": experiment["sigma"]}
         experiment["circuit_information"].pop("encoding_circuit")
 
     elif experiment["method"] == "FQK":
         OSolver = FQK_solver(experiment["circuit_information"],
-                                executor_object, regularization_parameter=eta)
+                                executor_object, regularization_parameter=eta, CircuitInformation = CircuitInformation(experiment))
         experiment["circuit_information"].pop("encoding_circuit")
 
     elif experiment["method"] == "classical_RBF":
@@ -104,7 +134,7 @@ def wrapper_experiment_solver(experiment):
         elif method_information_copy["optimizer"] == "SGLBO":
             Optimizer = SGLBO(options={"log_file": experiment["path"] + f".log", **method_information_copy })
 
-        loss_ODE = ODELoss(loss, grad_loss, initial_vec = f_initial, eta=eta, boundary_handling = boundary_handling, true_solution=numerical_solution[:,0].flatten())
+        loss_ODE = ODELoss(loss, grad_loss, initial_vec = f_initial, eta=eta, boundary_handling = boundary_handling, true_solution = f_numerical_solution)
         EncodingCircuit = experiment["circuit_information"]["encoding_circuit"]
         #pop the encoding_circuit from the dict
         experiment["circuit_information"].pop("encoding_circuit")
@@ -137,28 +167,31 @@ def wrapper_experiment_solver(experiment):
         y_pred = clf.predict(x_span)
         params = clf._param
     
-    print(experiment["method"])
     if experiment["method"].startswith("QNN") == False:    
         solution, loss_by_iteration = OSolver.solver(x_span, f_initial, loss)
         f_sol = solution[0]
         optimal_alpha = solution[1]
-        ode_loss = loss_by_iteration[0]
-        mse_loss = get_mse_loss(loss_by_iteration[1], cache[solution_label][:,0].flatten())
+        L_loss_history = loss_by_iteration[0]  #shape (iteration, x_span.shape[0] )
+        f_loss_history = get_f_loss(np.array(loss_by_iteration[1]), f_numerical_solution) 
+        iv_loss_history = eta*(np.array(loss_by_iteration[1])[:,0] - f_initial)**2   
+        dfdx_loss_history = get_f_loss(np.array(loss_by_iteration[2]), dfdx_numerical_solution)
+        #print initial and final loss
+        # print(f"Initial L Loss: {L_loss_history[0]}", f"Final L Loss: {L_loss_history[-1]}")
+        # print(f"Initial f Loss: {f_loss_history[0]}", f"Final f Loss: {f_loss_history[-1]}")
+        # print(f"Initial dfdx Loss: {dfdx_loss_history[0]}", f"Final dfdx Loss: {dfdx_loss_history[-1]}")
+        # print(f"Initial iv Loss: {iv_loss_history[0]}", f"Final iv Loss: {iv_loss_history[-1]}")
+        print("----")
+
     else:
         f_sol = y_pred
         print(params)
         optimal_alpha = params
-
-
     
-    
-    mse = np.mean((f_sol - cache[solution_label][:,0].flatten())**2)
-    mse_normalized = np.mean(((f_sol - cache[solution_label][:,0].flatten())**2)/cache[solution_label][:,0].flatten())
+    mse = np.mean((f_sol - f_numerical_solution)**2)
 
     dict_to_save = {"f_sol": f_sol, 
                     "optimal_alpha": optimal_alpha, 
                     "mse": mse, 
-                    "mse_normalized": mse_normalized,
                     "method": experiment["method"],
                     "loss_name": experiment["loss_name"],
                     "domain": experiment["x_domain"], 
@@ -168,8 +201,10 @@ def wrapper_experiment_solver(experiment):
     }
     
     try:
-        dict_to_save["mse_history"] = mse_loss
-        dict_to_save["loss_history"] = ode_loss
+        dict_to_save["f_loss_history"] = f_loss_history #old name:mse_history
+        dict_to_save["dfdx_loss_history"] = dfdx_loss_history 
+        dict_to_save["iv_loss_history"] = iv_loss_history
+        dict_to_save["L_loss_history"] = L_loss_history #L_loss_history
     except:
         pass
     
@@ -184,7 +219,7 @@ def wrapper_experiment_solver(experiment):
             dict_to_save[key] = value
    
 
-    print(dict_to_save)
+    #print(dict_to_save)
     
     #result_dic_list.append(pd.DataFrame([dict_to_save]))
 
@@ -194,4 +229,4 @@ def wrapper_experiment_solver(experiment):
     #df.reset_index(drop=True, inplace=True)
 
     df_.to_feather(experiment_path + ".feather")
-    print("Saved at:", experiment_path + ".feather")
+    #print("Saved at:", experiment_path + ".feather")

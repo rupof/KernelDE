@@ -17,9 +17,11 @@ from .kernel_solver import *
 import numpy as np
 from scipy.optimize import minimize
 
+cache = {}
+
 class FQK_solver:
 
-    def __init__(self, circuit_information, executor, regularization_parameter=1):
+    def __init__(self, circuit_information, executor, regularization_parameter=1, CircuitInformation = None):
         """
         Initializes the Solver object.
 
@@ -33,6 +35,7 @@ class FQK_solver:
         self.circuit_information_complete = circuit_information
         self.circuit_information = {key: value for key, value in circuit_information.items() if key not in {"encoding_circuit", "num_qubits"}}
         self.regularization_parameter = regularization_parameter    
+        self.CircuitInformation = CircuitInformation
     
     def get_plotting_relevant_info(self):
         info =  self.circuit_information_complete
@@ -138,37 +141,36 @@ class FQK_solver:
         - output_f: The FQK kernel.
         - output_dfdx: The derivatives of the FQK kernel:  shape (n, n, m*2),  the last dimension is the derivative with respect to the input data. 
         """
-        
-
-        x_array = x_array.reshape(-1, 1) #reshape to column vector
-        x_list_circuit_format = self.x_to_circuit_format(x_array)
-
-        if qnn_.num_parameters != 0:
-            np.random.seed(1)
-            params = np.random.rand(qnn_.num_parameters)
+        if self.CircuitInformation in cache:
+            return  cache[self.CircuitInformation]
         else:
-            params = []
-        output_f = qnn_.evaluate(x_list_circuit_format, params, coef, "f")["f"]  # (n*n, )
-        output_dfdx = qnn_.evaluate(x_list_circuit_format, params, coef, "dfdx")["dfdx"] # (n*n, 2*m)
+            print("New calculation FQK for qubits:", self.CircuitInformation.get_info()["num_qubits"], self.CircuitInformation.get_info())
+            x_array = x_array.reshape(-1, 1) #reshape to column vector
+            x_list_circuit_format = self.x_to_circuit_format(x_array)
 
-        print("output_f", output_f.shape)
-        print("output_dfdx", output_dfdx.shape)
-        if len(f_initial) == 2:
-            output_dfdxdx = qnn_.evaluate(x_list_circuit_format, params, coef, "dfdxdx")["dfdxdx"] # (n*n, 
-            output_dfdxdx = output_dfdxdx.reshape((len(x_array), len(x_array), len(x_array[0])*2, len(x_array[0])*2))
+            if qnn_.num_parameters != 0:
+                np.random.seed(1)
+                params = np.random.rand(qnn_.num_parameters)
+            else:
+                params = []
+            output_f = qnn_.evaluate(x_list_circuit_format, params, coef, "f")["f"]  # (n*n, )
+            output_dfdx = qnn_.evaluate(x_list_circuit_format, params, coef, "dfdx")["dfdx"] # (n*n, 2*m)
 
-        else:
-            output_dfdxdx = np.zeros((len(x_array), len(x_array), len(x_array[0])*2, len(x_array[0])*2))
+            if len(f_initial) == 2:
+                output_dfdxdx = qnn_.evaluate(x_list_circuit_format, params, coef, "dfdxdx")["dfdxdx"] # (n*n, 
+                output_dfdxdx = output_dfdxdx.reshape((len(x_array), len(x_array), len(x_array[0])*2, len(x_array[0])*2))
+
+            else:
+                output_dfdxdx = np.zeros((len(x_array), len(x_array), len(x_array[0])*2, len(x_array[0])*2))
 
 
-        #reshape the output to the shape of the gram matrix
-        output_f = output_f.reshape((len(x_array), len(x_array)))
-        output_dfdx = output_dfdx.reshape((len(x_array), len(x_array), len(x_array[0])*2))
+            #reshape the output to the shape of the gram matrix
+            output_f = output_f.reshape((len(x_array), len(x_array)))
+            output_dfdx = output_dfdx.reshape((len(x_array), len(x_array), len(x_array[0])*2))
 
 
-        print("output_dfdx", output_dfdx.shape)
-
-        return output_f, output_dfdx[:,:,0], output_dfdxdx[:,:,0,0]
+            cache[self.CircuitInformation] = output_f, output_dfdx[:,:,0], output_dfdxdx[:,:,0,0]
+            return output_f, output_dfdx[:,:,0], output_dfdxdx[:,:,0,0]
 
    
     def solver(self, x_span, f_initial, L_functional, return_derivatives = False):
@@ -193,7 +195,7 @@ class FQK_solver:
 
         FQK_qnn, obs_coef = self.FQK_QNN()
         K_f, K_dfdx, K_dfdxdx = self.get_FQK_kernel_derivatives(x_span, FQK_qnn, obs_coef, f_initial)
-        kernel_list = np.array([K_f, K_dfdx, K_dfdxdx])
+        kernel_list = [K_f, K_dfdx, K_dfdxdx]
         Solver_ = Solver(kernel_list, self.regularization_parameter)
         solution_ = Solver_.solver(x_span, f_initial, L_functional = L_functional)
         if return_derivatives:

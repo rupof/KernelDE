@@ -127,14 +127,17 @@ experiment_PQK_combination_ho = get_experiment_combination_list([function_list_h
 
 
 encoding_circuit_list = ["Separable_rx"]
-function_list_ho = [("harmonic_oscillator", [1, -1], np.linspace(0, 1*3.14, 20))]
+function_list_ho = [("paper", [1], np.linspace(0, 1*3.14, 10))]
 executor_type_list = ["pennylane"]    
 num_qubits_list = [2]
 num_layers_list = [1]
 quantum_bandwith = [1]
+
+
 gamma_classical_bandwidth_list = np.array([1])
 sigma_classical_bandwidth_list = 0.5*(1/gamma_classical_bandwidth_list)**2
-experiment_QNN_combination_ho = get_experiment_combination_list([function_list_ho, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, [("PQK"), ("FQK")], executor_type_list, quantum_bandwith])
+method_list = [("FQK", {"eta": eta})  for eta in [0.1, 0.2, 2, 3, 4]] +  [("PQK", {"eta": eta})  for eta in [0.1, 0.2, 2, 3, 4]] 
+experiment_QNN_combination_ho = get_experiment_combination_list([function_list_ho, encoding_circuit_list, num_qubits_list, num_layers_list, sigma_classical_bandwidth_list, method_list, executor_type_list, quantum_bandwith])
 #8
 
 encoding_circuit_list = ["YZ_CX_EncodingCircuit"]
@@ -584,13 +587,14 @@ experiment_shots_fast_test = get_experiment_combination_list([function_list, enc
 #31
 
 encoding_circuit_list = ["HEEAndChebyshevTower"]
-function_list = [("paper", [1], np.linspace(0, 0.9, 30)), 
-                 ("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, 30)),
-                 ("polynomial_with_exp", [3], np.linspace(0, 0.9, 30)),
-                 ("paper_decay_QNN", [1], np.linspace(0, 0.9, 30)),
-                ("simple_test_QNN", [1], np.linspace(0, 0.9, 30)),
-                ("paper_nontrivial_dynamics", [0.75], np.linspace(0, 0.9, 30)),
-                ("logistic_equation", [0.1], np.linspace(0, 0.9, 30)),
+n_points = 50
+function_list = [("paper", [1], np.linspace(0, 0.9, n_points)), 
+                 ("log_ode", [np.log(0.01)], np.linspace(0.01, 0.9, n_points)),
+                 ("polynomial_with_exp", [3], np.linspace(0, 0.9, n_points)),
+                 ("paper_decay_QNN", [1], np.linspace(0, 0.9, n_points)),
+                ("simple_test_QNN", [1], np.linspace(0, 0.9, n_points)),
+                ("paper_nontrivial_dynamics", [0.75], np.linspace(0, 0.9, n_points)),
+                ("logistic_equation", [0.1], np.linspace(0, 0.9, n_points)),
                  ]
 executor_type_list = ["pennylane"]
 num_qubits_list = [2,3,4,5,6,7,8]

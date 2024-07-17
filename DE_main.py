@@ -39,7 +39,6 @@ for idx, experiment in enumerate(experiment_list):
     results_performance_item_path = os.path.join(results_folder_path, f"{idx}")
     experiment["path"] = results_performance_item_path
 
-print(experiment_list)
 
 print("Number of experiments:", len(experiment_list))
 print("Index of experiment list:", index_experiment_list)
